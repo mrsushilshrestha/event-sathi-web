@@ -1,0 +1,27 @@
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.event_list, name='event_list'),
+    path('create/', views.event_create, name='event_create'),
+    path('<slug:slug>/', views.event_detail, name='event_detail'),
+    path('<slug:slug>/register/', views.event_register, name='event_register'),
+    path('<slug:slug>/agenda/', views.event_agenda, name='event_agenda'),
+    path('<slug:slug>/speakers/', views.event_speakers, name='event_speakers'),
+    path('<slug:slug>/sponsors/', views.event_sponsors, name='event_sponsors'),
+    path('<slug:slug>/announcements/', views.event_announcements, name='event_announcements'),
+    path('<slug:slug>/manage/', views.event_manage, name='event_manage'),
+    path('<slug:slug>/manage/tickets/', views.manage_tickets, name='manage_tickets'),
+    path('<slug:slug>/manage/speakers/', views.manage_speakers, name='manage_speakers'),
+    path('<slug:slug>/manage/sessions/', views.manage_sessions, name='manage_sessions'),
+    path('<slug:slug>/manage/sponsors/', views.manage_sponsors, name='manage_sponsors'),
+    path('<slug:slug>/manage/announcements/', views.manage_announcements, name='manage_announcements'),
+    path('<slug:slug>/manage/checkin/', views.check_in_view, name='check_in'),
+    path('<slug:slug>/manage/analytics/', views.event_analytics, name='event_analytics'),
+    path('<slug:slug>/session/<int:session_id>/', views.session_detail, name='session_detail'),
+    path('<slug:slug>/session/<int:session_id>/qa/upvote/<int:question_id>/', views.upvote_question, name='upvote_question'),
+    path('<slug:slug>/session/<int:session_id>/poll/vote/<int:poll_id>/', views.vote_poll, name='vote_poll'),
+    path('ticket/<str:ticket_id>/', views.view_ticket, name='view_ticket'),
+    path('my/tickets/', views.my_tickets, name='my_tickets'),
+    path('my/events/', views.my_events, name='my_events'),
+]

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+{% block title %}{{ action }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:800px;">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'my_events' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold mb-0">{{ action }}</h4>
+    </div>
+    <div class="card p-4 p-lg-5">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-12">
+                    <label class="form-label">Event Title *</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Category</label>
+                    {{ form.category }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Status</label>
+                    {{ form.status }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Description *</label>
+                    {{ form.description }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Start Date & Time *</label>
+                    {{ form.start_date }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">End Date & Time *</label>
+                    {{ form.end_date }}
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">Venue *</label>
+                    {{ form.venue }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">City *</label>
+                    {{ form.city }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Max Capacity</label>
+                    {{ form.max_capacity }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Tags</label>
+                    {{ form.tags }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Banner Image</label>
+                    {{ form.banner }}
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        {{ form.is_virtual }}
+                        <label class="form-check-label">This is a virtual/hybrid event</label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Virtual/Stream Link</label>
+                    {{ form.virtual_link }}
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-3">
+                <button type="submit" class="btn btn-primary px-5">{{ action }}</button>
+                <a href="{% url 'my_events' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+input, textarea, select { width:100%; display:block; }
+</style>
+{% endblock %}

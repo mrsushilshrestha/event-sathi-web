@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:760px;">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'profile' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <h4 class="fw-bold mb-0">Edit Profile</h4>
+    </div>
+    <div class="card p-4 p-lg-5">
+        <form method="post" enctype="multipart/form-data" novalidate>
+            {% csrf_token %}
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <label class="form-label">First Name</label>
+                    {{ form.first_name }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Last Name</label>
+                    {{ form.last_name }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Email</label>
+                    {{ form.email }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Bio</label>
+                    {{ form.bio }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Phone</label>
+                    {{ form.phone }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">Organization</label>
+                    {{ form.organization }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Designation</label>
+                    {{ form.designation }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Profile Photo</label>
+                    {{ form.photo }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">Interests</label>
+                    {{ form.interests }}
+                    <div class="form-text text-muted">Comma-separated: AI, Design, Blockchain</div>
+                </div>
+                <hr>
+                <div class="col-md-4">
+                    <label class="form-label">LinkedIn URL</label>
+                    {{ form.linkedin }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Twitter/X URL</label>
+                    {{ form.twitter }}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Website URL</label>
+                    {{ form.website }}
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-3">
+                <button type="submit" class="btn btn-primary px-5">Save Changes</button>
+                <a href="{% url 'profile' %}" class="btn btn-outline-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+input, textarea, select { width:100%; display:block; }
+</style>
+{% endblock %}

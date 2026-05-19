@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% block title %}{{ session.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'event_detail' event.slug %}" class="text-muted text-decoration-none">{{ event.title|truncatewords:5 }}</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'event_agenda' event.slug %}" class="text-muted text-decoration-none">Agenda</a></li>
+                <li class="breadcrumb-item active text-muted">{{ session.title|truncatewords:5 }}</li>
+            </ol>
+        </nav>
+        <div class="row align-items-start">
+            <div class="col-lg-8">
+                <span class="badge badge-category mb-2">{{ session.get_track_display }}</span>
+                <h2 class="fw-bold text-white mb-2">{{ session.title }}</h2>
+                <div class="d-flex flex-wrap gap-3 text-muted">
+                    <span><i class="bi bi-clock me-1 text-warning"></i>{{ session.start_time|date:"g:i A" }} — {{ session.end_time|date:"g:i A" }}</span>
+                    {% if session.room %}<span><i class="bi bi-door-open me-1 text-warning"></i>{{ session.room }}</span>{% endif %}
+                    <span><i class="bi bi-hourglass me-1 text-warning"></i>{{ session.duration_minutes }} min</span>
+                </div>
+            </div>
+            {% if session.stream_url %}
+            <div class="col-lg-4 mt-3 mt-lg-0">
+                <a href="{{ session.stream_url }}" class="btn btn-info w-100" target="_blank">
+                    <i class="bi bi-camera-video me-2"></i>Join Live Stream
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row gy-4">
+        <div class="col-lg-7">
+            <!-- Speaker -->
+            {% if session.speaker %}
+            <div class="card p-4 mb-4">
+                <h6 class="fw-bold mb-3">Speaker</h6>
+                <div class="d-flex gap-3 align-items-center">
+                    {% if session.speaker.photo %}
+                    <img src="{{ session.speaker.photo.url }}" class="speaker-photo" style="width:60px;height:60px;" alt="{{ session.speaker.name }}">
+                    {% else %}
+                    <div class="speaker-avatar" style="width:60px;height:60px;font-size:1.3rem;flex-shrink:0;">{{ session.speaker.name|first|upper }}</div>
+                    {% endif %}
+                    <div>
+                        <div class="fw-bold">{{ session.speaker.name }}</div>
+                        <small class="text-muted">{{ session.speaker.designation }}</small>
+                        {% if session.speaker.organization %}<small class="text-muted"> · {{ session.speaker.organization }}</small>{% endif %}
+                        {% if session.speaker.abstract %}
+                        <p class="text-muted small mt-2 mb-0">{{ session.speaker.abstract|truncatewords:30 }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if session.description %}
+            <div class="card p-4 mb-4">
+                <h6 class="fw-bold mb-3">Session Description</h6>
+                <p class="text-muted" style="white-space:pre-line;">{{ session.description }}</p>
+            </div>
+            {% endif %}
+
+            <!-- Recording -->
+            {% if session.recording_url %}
+            <div class="card p-4 mb-4" style="border:1px solid rgba(108,61,225,0.3);">
+                <h6 class="fw-bold mb-2"><i class="bi bi-play-circle me-2 text-warning"></i>Recording Available</h6>
+                <a href="{{ session.recording_url }}" class="btn btn-outline-primary" target="_blank">Watch Recording</a>
+            </div>
+            {% endif %}
+
+            <!-- Live Q&A -->
+            <div class="card p-4 mb-4">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h5 class="fw-bold mb-0"><i class="bi bi-chat-quote me-2"></i>Live Q&A</h5>
+                    <span class="badge badge-category">{{ questions.count }} question{{ questions.count|pluralize }}</span>
+                </div>
+                {% if user.is_authenticated %}
+                <form method="post" class="mb-4">
+                    {% csrf_token %}
+                    <label class="form-label fw-semibold">Ask a Question</label>
+                    {{ qa_form.question }}
+                    <button type="submit" class="btn btn-primary mt-2 px-4">
+                        <i class="bi bi-send me-1"></i>Submit Question
+                    </button>
+                </form>
+                {% else %}
+                <p class="text-muted small mb-4"><a href="{% url 'login' %}" class="text-warning">Login</a> to ask questions.</p>
+                {% endif %}
+
+                {% if questions %}
+                <div class="d-flex flex-column gap-3">
+                    {% for q in questions %}
+                    <div class="p-3 rounded-3" style="background:rgba(255,255,255,0.04);border:1px solid var(--es-border);">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="fw-semibold small">{{ q.question }}</div>
+                            {% if q.is_answered %}<span class="badge bg-success ms-2" style="flex-shrink:0;">Answered</span>{% endif %}
+                        </div>
+                        {% if q.answer %}
+                        <div class="p-2 rounded-2 mb-2" style="background:rgba(16,185,129,0.08);border-left:3px solid #10b981;">
+                            <small class="text-muted"><strong class="text-success">Answer: </strong>{{ q.answer }}</small>
+                        </div>
+                        {% endif %}
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">
+                                <div class="avatar-sm d-inline-flex me-1" style="width:18px;height:18px;font-size:0.55rem;vertical-align:middle;">
+                                    {{ q.user.first_name|first|upper }}
+                                </div>
+                                {{ q.user.get_full_name|default:q.user.username }} · {{ q.created_at|timesince }} ago
+                            </small>
+                            <a href="{% url 'upvote_question' event.slug session.id q.id %}" class="btn btn-sm {% if user in q.upvotes.all %}btn-warning{% else %}btn-outline-secondary{% endif %} py-0 px-2">
+                                <i class="bi bi-arrow-up me-1"></i>{{ q.upvote_count }}
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="text-center py-3 text-muted small">Be the first to ask a question!</div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sidebar - Polls -->
+        <div class="col-lg-5">
+            {% if is_organizer %}
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-3"><i class="bi bi-plus-circle me-2"></i>Create Poll</h5>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <input type="hidden" name="poll_question" value="1">
+                    <div class="mb-3">
+                        <label class="form-label small">Question</label>
+                        {{ poll_form.question }}
+                    </div>
+                    {% for i in "1234" %}
+                    <div class="mb-2">
+                        <label class="form-label small">Choice {{ i }} {% if i == "3" or i == "4" %}(optional){% endif %}</label>
+                        {% if i == "1" %}{{ poll_form.choice_1 }}{% elif i == "2" %}{{ poll_form.choice_2 }}{% elif i == "3" %}{{ poll_form.choice_3 }}{% else %}{{ poll_form.choice_4 }}{% endif %}
+                    </div>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-primary w-100 mt-2">Launch Poll</button>
+                </form>
+            </div>
+            {% endif %}
+
+            <!-- Active Polls -->
+            {% if polls %}
+            {% for poll in polls %}
+            <div class="card p-4 mb-4">
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <i class="bi bi-bar-chart-line text-warning"></i>
+                    <h6 class="fw-bold mb-0">Poll</h6>
+                    <span class="badge bg-success ms-auto">Live</span>
+                </div>
+                <p class="fw-semibold mb-3">{{ poll.question }}</p>
+
+                {% if poll.id in user_votes %}
+                <!-- Show results -->
+                {% for choice in poll.choices.all %}
+                <div class="mb-2">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-muted">{{ choice.text }}</small>
+                        <small class="fw-bold">{{ choice.vote_count }} ({{ choice.percentage }}%)</small>
+                    </div>
+                    <div class="progress">
+                        <div class="progress-bar" style="width:{{ choice.percentage }}%"></div>
+                    </div>
+                </div>
+                {% endfor %}
+                <small class="text-muted">{{ poll.total_votes }} total votes · You already voted</small>
+
+                {% elif user.is_authenticated %}
+                <!-- Voting form -->
+                <form method="post" action="{% url 'vote_poll' event.slug session.id poll.id %}">
+                    {% csrf_token %}
+                    {% for choice in poll.choices.all %}
+                    <label class="poll-option d-flex align-items-center gap-2 mb-2" style="cursor:pointer;">
+                        <input type="radio" name="choice_id" value="{{ choice.id }}" class="poll-option-radio">
+                        <span class="small">{{ choice.text }}</span>
+                    </label>
+                    {% endfor %}
+                    <button type="submit" class="btn btn-warning w-100 mt-2 text-dark fw-bold">Vote</button>
+                </form>
+                {% else %}
+                <p class="text-muted small"><a href="{% url 'login' %}" class="text-warning">Login</a> to vote.</p>
+                {% endif %}
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="card p-4 text-center">
+                <i class="bi bi-bar-chart fs-1 text-muted mb-3 d-block"></i>
+                <h6 class="fw-bold">No active polls</h6>
+                {% if is_organizer %}
+                <small class="text-muted">Create a poll to engage your audience!</small>
+                {% else %}
+                <small class="text-muted">The organizer will launch polls during the session.</small>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<style>
+textarea, input[type="text"] { width:100%; display:block; }
+</style>
+{% endblock %}

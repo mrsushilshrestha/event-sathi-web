@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}Analytics - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <h4 class="fw-bold mb-0"><i class="bi bi-bar-chart-line me-2 text-warning"></i>Event Analytics</h4>
+        <small class="text-muted">{{ event.title }}</small>
+    </div>
+</div>
+<div class="container py-4">
+    <div class="row gy-4">
+        <div class="col-lg-3">
+            <div class="card p-3 manage-sidebar">
+                <nav class="nav flex-column gap-1">
+                    <a class="nav-link" href="{% url 'event_manage' event.slug %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                    <a class="nav-link" href="{% url 'manage_tickets' event.slug %}"><i class="bi bi-ticket me-2"></i>Ticket Tiers</a>
+                    <a class="nav-link" href="{% url 'manage_speakers' event.slug %}"><i class="bi bi-mic me-2"></i>Speakers</a>
+                    <a class="nav-link" href="{% url 'manage_sessions' event.slug %}"><i class="bi bi-list-check me-2"></i>Sessions</a>
+                    <a class="nav-link" href="{% url 'manage_sponsors' event.slug %}"><i class="bi bi-building me-2"></i>Sponsors</a>
+                    <a class="nav-link" href="{% url 'manage_announcements' event.slug %}"><i class="bi bi-megaphone me-2"></i>Announcements</a>
+                    <hr class="border-secondary">
+                    <a class="nav-link" href="{% url 'check_in' event.slug %}"><i class="bi bi-qr-code-scan me-2"></i>Check-In Portal</a>
+                    <a class="nav-link active" href="{% url 'event_analytics' event.slug %}"><i class="bi bi-bar-chart-line me-2"></i>Analytics</a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <!-- Top Metrics -->
+            <div class="row gy-3 mb-4">
+                <div class="col-sm-4 col-6">
+                    <div class="metric-card"><div class="metric-value">{{ total_registered }}</div><div class="metric-label">Total Registered</div></div>
+                </div>
+                <div class="col-sm-4 col-6">
+                    <div class="metric-card" style="border:1px solid rgba(16,185,129,0.3);">
+                        <div class="metric-value text-success">{{ total_checked_in }}</div>
+                        <div class="metric-label">Checked In</div>
+                    </div>
+                </div>
+                <div class="col-sm-4 col-6">
+                    <div class="metric-card" style="border:1px solid rgba(245,158,11,0.3);">
+                        <div class="metric-value text-warning">₹{{ total_revenue|floatformat:0 }}</div>
+                        <div class="metric-label">Revenue</div>
+                    </div>
+                </div>
+                <div class="col-sm-4 col-6">
+                    <div class="metric-card"><div class="metric-value">{{ sessions_count }}</div><div class="metric-label">Sessions</div></div>
+                </div>
+                <div class="col-sm-4 col-6">
+                    <div class="metric-card"><div class="metric-value">{{ speakers_count }}</div><div class="metric-label">Speakers</div></div>
+                </div>
+                <div class="col-sm-4 col-6">
+                    <div class="metric-card"><div class="metric-value">{{ sponsors_count }}</div><div class="metric-label">Sponsors</div></div>
+                </div>
+            </div>
+
+            <!-- Engagement -->
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-3">Engagement Metrics</h5>
+                <div class="row gy-3">
+                    <div class="col-sm-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Q&A Questions</small>
+                            <small class="fw-bold">{{ qa_count }}</small>
+                        </div>
+                        <div class="progress"><div class="progress-bar" style="width:{% if qa_count > 0 %}70{% else %}0{% endif %}%;background:linear-gradient(90deg,#ec4899,#a78bfa);"></div></div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Polls Created</small>
+                            <small class="fw-bold">{{ polls_count }}</small>
+                        </div>
+                        <div class="progress"><div class="progress-bar" style="width:{% if polls_count > 0 %}60{% else %}0{% endif %}%;background:linear-gradient(90deg,#f59e0b,#ef4444);"></div></div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Check-In Rate</small>
+                            {% if total_registered > 0 %}
+                            <small class="fw-bold">{% widthratio total_checked_in total_registered 100 %}%</small>
+                            {% else %}<small class="fw-bold">0%</small>{% endif %}
+                        </div>
+                        <div class="progress">
+                            {% if total_registered > 0 %}
+                            <div class="progress-bar bg-success" style="width:{% widthratio total_checked_in total_registered 100 %}%"></div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="d-flex justify-content-between mb-1">
+                            <small class="text-muted">Capacity Filled</small>
+                            <small class="fw-bold">{% widthratio total_registered event.max_capacity 100 %}%</small>
+                        </div>
+                        <div class="progress"><div class="progress-bar" style="width:{% widthratio total_registered event.max_capacity 100 %}%"></div></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ticket Tier Breakdown -->
+            {% if tier_data %}
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-3">Ticket Tier Breakdown</h5>
+                <div class="table-responsive">
+                    <table class="table table-dark" style="border-color:var(--es-border);">
+                        <thead><tr class="text-muted small"><th>Tier</th><th>Price</th><th>Capacity</th><th>Sold</th><th>Revenue</th><th>Fill Rate</th></tr></thead>
+                        <tbody>
+                            {% for item in tier_data %}
+                            <tr style="font-size:0.9rem;">
+                                <td class="fw-semibold">{{ item.tier.name }}</td>
+                                <td>{% if item.tier.price == 0 %}Free{% else %}₹{{ item.tier.price|floatformat:0 }}{% endif %}</td>
+                                <td>{{ item.tier.capacity }}</td>
+                                <td>{{ item.sold }}</td>
+                                <td class="text-warning">{% if item.revenue > 0 %}₹{{ item.revenue|floatformat:0 }}{% else %}—{% endif %}</td>
+                                <td>
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="progress flex-grow-1" style="height:6px;">
+                                            <div class="progress-bar" style="width:{% widthratio item.sold item.tier.capacity 100 %}%"></div>
+                                        </div>
+                                        <small>{% widthratio item.sold item.tier.capacity 100 %}%</small>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Daily Registrations -->
+            {% if daily_regs %}
+            <div class="card p-4">
+                <h5 class="fw-bold mb-3">Daily Registrations</h5>
+                <div class="d-flex align-items-end gap-2" style="height:120px;">
+                    {% for day in daily_regs %}
+                    <div class="d-flex flex-column align-items-center flex-grow-1">
+                        <small class="text-muted mb-1" style="font-size:0.65rem;">{{ day.count }}</small>
+                        <div style="width:100%;border-radius:4px 4px 0 0;background:linear-gradient(to top,var(--es-primary),#a78bfa);height:{% widthratio day.count 10 100 %}px;min-height:4px;"></div>
+                        <small class="text-muted mt-1" style="font-size:0.6rem;">{{ day.date|date:"d M" }}</small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

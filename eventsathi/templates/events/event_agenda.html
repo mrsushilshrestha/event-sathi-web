@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Agenda - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'event_detail' event.slug %}" class="text-muted text-decoration-none">{{ event.title|truncatewords:5 }}</a></li>
+                <li class="breadcrumb-item active text-muted">Agenda</li>
+            </ol>
+        </nav>
+        <h3 class="fw-bold mb-0">Event Schedule</h3>
+        <p class="text-muted mb-0">{{ event.start_date|date:"d M" }} — {{ event.end_date|date:"d M Y" }}</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    {% if user.is_authenticated %}
+    <div class="d-flex gap-2 mb-4">
+        <a href="#" onclick="filterTrack('all')" class="btn btn-sm btn-outline-primary active" id="btn-all">All Sessions</a>
+        {% if user.is_authenticated %}
+        <a href="#" onclick="filterTrack('favorites')" class="btn btn-sm btn-outline-warning" id="btn-favorites">
+            <i class="bi bi-bookmark-star me-1"></i>My Schedule
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if sessions %}
+    <div class="timeline">
+        {% for session in sessions %}
+        <div class="card mb-3 p-4 track-{{ session.track }} session-item {% if session.id in favorite_ids %}is-favorite{% endif %}"
+             data-track="{{ session.track }}" data-favorite="{% if session.id in favorite_ids %}true{% else %}false{% endif %}">
+            <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
+                <div class="flex-grow-1">
+                    <div class="d-flex align-items-center gap-2 mb-2 flex-wrap">
+                        <span class="badge" style="background:rgba(255,255,255,0.1);font-size:0.75rem;">{{ session.get_track_display }}</span>
+                        {% if session.room %}<span class="badge badge-category" style="font-size:0.75rem;"><i class="bi bi-door-open me-1"></i>{{ session.room }}</span>{% endif %}
+                        <span class="text-warning fw-semibold small">
+                            {{ session.start_time|date:"g:i A" }} — {{ session.end_time|date:"g:i A" }}
+                            <span class="text-muted ms-1">({{ session.duration_minutes }} min)</span>
+                        </span>
+                    </div>
+                    <h5 class="fw-bold mb-2">
+                        <a href="{% url 'session_detail' event.slug session.id %}" class="text-white text-decoration-none">{{ session.title }}</a>
+                    </h5>
+                    {% if session.description %}
+                    <p class="text-muted small mb-2">{{ session.description|truncatewords:25 }}</p>
+                    {% endif %}
+                    {% if session.speaker %}
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="avatar-sm" style="width:28px;height:28px;font-size:0.7rem;">{{ session.speaker.name|first|upper }}</div>
+                        <small class="text-muted"><strong class="text-white">{{ session.speaker.name }}</strong> — {{ session.speaker.designation }}</small>
+                    </div>
+                    {% endif %}
+                    <div class="d-flex gap-2 mt-2">
+                        {% if session.stream_url %}
+                        <a href="{{ session.stream_url }}" class="btn btn-sm btn-outline-info py-0 px-2" target="_blank"><i class="bi bi-camera-video me-1"></i>Live</a>
+                        {% endif %}
+                        {% if session.recording_url %}
+                        <a href="{{ session.recording_url }}" class="btn btn-sm btn-outline-secondary py-0 px-2" target="_blank"><i class="bi bi-play-circle me-1"></i>Recording</a>
+                        {% endif %}
+                        <a href="{% url 'session_detail' event.slug session.id %}" class="btn btn-sm btn-outline-primary py-0 px-2"><i class="bi bi-chat-dots me-1"></i>Q&A / Poll</a>
+                    </div>
+                </div>
+                {% if user.is_authenticated %}
+                <form method="post" class="ms-2">
+                    {% csrf_token %}
+                    <input type="hidden" name="toggle_favorite" value="{{ session.id }}">
+                    <button type="submit" class="btn btn-sm {% if session.id in favorite_ids %}btn-warning{% else %}btn-outline-secondary{% endif %}" title="{% if session.id in favorite_ids %}Remove from my schedule{% else %}Add to my schedule{% endif %}">
+                        <i class="bi bi-bookmark{% if session.id in favorite_ids %}-fill{% endif %}"></i>
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-calendar-x fs-1 text-muted mb-3 d-block"></i>
+        <h6 class="fw-bold">No sessions scheduled yet</h6>
+        <p class="text-muted small">Check back closer to the event date.</p>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function filterTrack(type) {
+    document.querySelectorAll('.session-item').forEach(item => {
+        if (type === 'all') {
+            item.style.display = 'block';
+        } else if (type === 'favorites') {
+            item.style.display = item.dataset.favorite === 'true' ? 'block' : 'none';
+        }
+    });
+    document.querySelectorAll('[id^="btn-"]').forEach(b => b.classList.remove('active'));
+    document.getElementById('btn-' + type)?.classList.add('active');
+}
+</script>
+{% endblock %}

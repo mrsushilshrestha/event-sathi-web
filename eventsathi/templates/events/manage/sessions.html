@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Sessions - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container"><h4 class="fw-bold mb-0">Manage Sessions</h4><small class="text-muted">{{ event.title }}</small></div>
+</div>
+<div class="container py-4">
+    <div class="row gy-4">
+        <div class="col-lg-3">
+            <div class="card p-3 manage-sidebar">
+                <nav class="nav flex-column gap-1">
+                    <a class="nav-link" href="{% url 'event_manage' event.slug %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                    <a class="nav-link" href="{% url 'manage_tickets' event.slug %}"><i class="bi bi-ticket me-2"></i>Ticket Tiers</a>
+                    <a class="nav-link" href="{% url 'manage_speakers' event.slug %}"><i class="bi bi-mic me-2"></i>Speakers</a>
+                    <a class="nav-link active" href="{% url 'manage_sessions' event.slug %}"><i class="bi bi-list-check me-2"></i>Sessions</a>
+                    <a class="nav-link" href="{% url 'manage_sponsors' event.slug %}"><i class="bi bi-building me-2"></i>Sponsors</a>
+                    <a class="nav-link" href="{% url 'manage_announcements' event.slug %}"><i class="bi bi-megaphone me-2"></i>Announcements</a>
+                    <hr class="border-secondary">
+                    <a class="nav-link" href="{% url 'check_in' event.slug %}"><i class="bi bi-qr-code-scan me-2"></i>Check-In Portal</a>
+                    <a class="nav-link" href="{% url 'event_analytics' event.slug %}"><i class="bi bi-bar-chart-line me-2"></i>Analytics</a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-3">Add Session</h5>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-12"><label class="form-label small">Title *</label>{{ form.title }}</div>
+                        <div class="col-md-6"><label class="form-label small">Speaker</label>{{ form.speaker }}</div>
+                        <div class="col-md-6"><label class="form-label small">Track</label>{{ form.track }}</div>
+                        <div class="col-md-6"><label class="form-label small">Start Time</label>{{ form.start_time }}</div>
+                        <div class="col-md-6"><label class="form-label small">End Time</label>{{ form.end_time }}</div>
+                        <div class="col-md-6"><label class="form-label small">Room/Location</label>{{ form.room }}</div>
+                        <div class="col-md-6"><label class="form-label small">Order</label>{{ form.order }}</div>
+                        <div class="col-12"><label class="form-label small">Description</label>{{ form.description }}</div>
+                        <div class="col-12"><label class="form-label small">Stream URL (optional)</label>{{ form.stream_url }}</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3 px-4">Add Session</button>
+                </form>
+            </div>
+            {% if sessions %}
+            <div class="d-flex flex-column gap-3">
+                {% for session in sessions %}
+                <div class="card p-4 track-{{ session.track }}">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <span class="badge mb-2" style="background:rgba(255,255,255,0.1);">{{ session.get_track_display }}</span>
+                            <h6 class="fw-bold mb-1">{{ session.title }}</h6>
+                            <small class="text-muted">
+                                <i class="bi bi-clock me-1"></i>{{ session.start_time|date:"g:i A" }} — {{ session.end_time|date:"g:i A" }}
+                                {% if session.speaker %} · <i class="bi bi-mic me-1"></i>{{ session.speaker.name }}{% endif %}
+                                {% if session.room %} · <i class="bi bi-door-open me-1"></i>{{ session.room }}{% endif %}
+                            </small>
+                        </div>
+                        <a href="{% url 'session_detail' event.slug session.id %}" class="btn btn-sm btn-outline-primary">Manage</a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-4 text-muted"><i class="bi bi-calendar-x fs-2 mb-2 d-block"></i>No sessions yet</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>input, textarea, select { width:100%; display:block; }</style>
+{% endblock %}

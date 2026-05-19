@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="container">
+        <div class="auth-card">
+            <div class="text-center mb-4">
+                <div class="auth-logo mb-2">
+                    <i class="bi bi-calendar-event-fill text-warning me-2"></i>
+                    <span class="text-white">EventSathi</span>
+                </div>
+                <h4 class="text-white fw-bold">Create your account</h4>
+                <p class="text-muted small">Join thousands of event enthusiasts</p>
+            </div>
+
+            <form method="post" novalidate>
+                {% csrf_token %}
+                <div class="row g-3">
+                    <div class="col-6">
+                        <label class="form-label">First Name</label>
+                        {{ form.first_name }}
+                        {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-6">
+                        <label class="form-label">Last Name</label>
+                        {{ form.last_name }}
+                        {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Username</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Email Address</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">I am a...</label>
+                        {{ form.role }}
+                        {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Password</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Confirm Password</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
+                    </div>
+                </div>
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger mt-3">{{ form.non_field_errors }}</div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary w-100 py-3 mt-4 fw-semibold">
+                    <i class="bi bi-person-plus me-2"></i>Create Account
+                </button>
+            </form>
+
+            <div class="divider-text my-4">or</div>
+
+            <div class="text-center">
+                <p class="text-muted small">Already have an account? <a href="{% url 'login' %}" class="text-warning fw-semibold text-decoration-none">Sign in</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.auth-wrapper input, .auth-wrapper select { width: 100%; display: block; }
+</style>
+{% endblock %}

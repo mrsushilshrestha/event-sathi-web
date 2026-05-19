@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Ticket Tiers - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <h4 class="fw-bold mb-0">Ticket Tiers</h4>
+        <small class="text-muted">{{ event.title }}</small>
+    </div>
+</div>
+<div class="container py-4">
+    <div class="row gy-4">
+        <div class="col-lg-3">
+            <div class="card p-3 manage-sidebar">
+                <nav class="nav flex-column gap-1">
+                    <a class="nav-link" href="{% url 'event_manage' event.slug %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                    <a class="nav-link active" href="{% url 'manage_tickets' event.slug %}"><i class="bi bi-ticket me-2"></i>Ticket Tiers</a>
+                    <a class="nav-link" href="{% url 'manage_speakers' event.slug %}"><i class="bi bi-mic me-2"></i>Speakers</a>
+                    <a class="nav-link" href="{% url 'manage_sessions' event.slug %}"><i class="bi bi-list-check me-2"></i>Sessions</a>
+                    <a class="nav-link" href="{% url 'manage_sponsors' event.slug %}"><i class="bi bi-building me-2"></i>Sponsors</a>
+                    <a class="nav-link" href="{% url 'manage_announcements' event.slug %}"><i class="bi bi-megaphone me-2"></i>Announcements</a>
+                    <hr class="border-secondary">
+                    <a class="nav-link" href="{% url 'check_in' event.slug %}"><i class="bi bi-qr-code-scan me-2"></i>Check-In Portal</a>
+                    <a class="nav-link" href="{% url 'event_analytics' event.slug %}"><i class="bi bi-bar-chart-line me-2"></i>Analytics</a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-3">Add Ticket Tier</h5>
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-4"><label class="form-label small">Name</label>{{ form.name }}</div>
+                        <div class="col-md-4"><label class="form-label small">Price (₹)</label>{{ form.price }}</div>
+                        <div class="col-md-4"><label class="form-label small">Capacity</label>{{ form.capacity }}</div>
+                        <div class="col-12"><label class="form-label small">Description</label>{{ form.description }}</div>
+                        <div class="col-12"><label class="form-label small">Benefits (one per line)</label>{{ form.benefits }}</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3 px-4">Add Tier</button>
+                </form>
+            </div>
+            {% if tiers %}
+            <div class="row gy-3">
+                {% for tier in tiers %}
+                <div class="col-md-6">
+                    <div class="card p-4">
+                        <div class="d-flex justify-content-between mb-2">
+                            <h5 class="fw-bold mb-0">{{ tier.name }}</h5>
+                            <span class="fw-bold text-warning">{% if tier.price == 0 %}Free{% else %}₹{{ tier.price|floatformat:0 }}{% endif %}</span>
+                        </div>
+                        {% if tier.description %}<p class="text-muted small mb-2">{{ tier.description }}</p>{% endif %}
+                        <div class="d-flex gap-3 mb-2">
+                            <small class="text-muted">Capacity: {{ tier.capacity }}</small>
+                            <small class="text-muted">Sold: {{ tier.get_sold_count }}</small>
+                            <small class="text-muted">Available: {{ tier.get_available }}</small>
+                        </div>
+                        <div class="progress mb-2"><div class="progress-bar" style="width:{% widthratio tier.get_sold_count tier.capacity 100 %}%"></div></div>
+                        {% if tier.get_benefits_list %}
+                        <ul class="list-unstyled small mb-0 mt-2">
+                            {% for b in tier.get_benefits_list %}
+                            <li class="text-muted"><i class="bi bi-check2-circle text-success me-1"></i>{{ b }}</li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>input, textarea, select { width:100%; display:block; }</style>
+{% endblock %}

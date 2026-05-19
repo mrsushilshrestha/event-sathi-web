@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block title %}Speakers - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'event_detail' event.slug %}" class="text-muted text-decoration-none">{{ event.title|truncatewords:5 }}</a></li>
+                <li class="breadcrumb-item active text-muted">Speakers</li>
+            </ol>
+        </nav>
+        <h3 class="fw-bold mb-0">Speaker Directory</h3>
+        <p class="text-muted mb-0">{{ speakers.count }} speaker{{ speakers.count|pluralize }} sharing their expertise</p>
+    </div>
+</div>
+
+<div class="container py-5">
+    {% if speakers %}
+    <div class="row gy-4">
+        {% for speaker in speakers %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card p-4 speaker-card h-100">
+                <div class="d-flex gap-3 mb-3">
+                    {% if speaker.photo %}
+                    <img src="{{ speaker.photo.url }}" class="speaker-photo" alt="{{ speaker.name }}" style="width:70px;height:70px;">
+                    {% else %}
+                    <div class="speaker-avatar" style="width:70px;height:70px;font-size:1.5rem;flex-shrink:0;">{{ speaker.name|first|upper }}</div>
+                    {% endif %}
+                    <div>
+                        <h5 class="fw-bold mb-1">{{ speaker.name }}</h5>
+                        <small class="text-muted d-block">{{ speaker.designation }}</small>
+                        {% if speaker.organization %}<small class="text-muted">{{ speaker.organization }}</small>{% endif %}
+                    </div>
+                </div>
+                {% if speaker.bio %}
+                <p class="text-muted small mb-3">{{ speaker.bio|truncatewords:30 }}</p>
+                {% endif %}
+                {% if speaker.abstract %}
+                <div class="p-3 rounded-2 mb-3" style="background:rgba(255,255,255,0.04);border:1px solid var(--es-border);">
+                    <small class="text-warning fw-semibold d-block mb-1">Abstract</small>
+                    <small class="text-muted">{{ speaker.abstract|truncatewords:20 }}</small>
+                </div>
+                {% endif %}
+                {% if speaker.sessions.all %}
+                <div class="mb-3">
+                    <small class="text-muted fw-semibold d-block mb-2">Sessions</small>
+                    {% for session in speaker.sessions.all %}
+                    <a href="{% url 'session_detail' event.slug session.id %}" class="badge badge-category me-1 text-decoration-none">{{ session.title|truncatewords:5 }}</a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+                <div class="d-flex gap-3 mt-auto">
+                    {% if speaker.linkedin %}<a href="{{ speaker.linkedin }}" class="text-muted" target="_blank"><i class="bi bi-linkedin fs-5"></i></a>{% endif %}
+                    {% if speaker.twitter %}<a href="{{ speaker.twitter }}" class="text-muted" target="_blank"><i class="bi bi-twitter-x fs-5"></i></a>{% endif %}
+                    {% if speaker.website %}<a href="{{ speaker.website }}" class="text-muted" target="_blank"><i class="bi bi-globe fs-5"></i></a>{% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-mic fs-1 text-muted mb-3 d-block"></i>
+        <h6 class="fw-bold">Speakers to be announced</h6>
+        <p class="text-muted small">Check back soon.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

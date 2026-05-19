@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% block title %}Sponsors - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-2">
+            <ol class="breadcrumb small">
+                <li class="breadcrumb-item"><a href="{% url 'event_detail' event.slug %}" class="text-muted text-decoration-none">{{ event.title|truncatewords:5 }}</a></li>
+                <li class="breadcrumb-item active text-muted">Sponsors</li>
+            </ol>
+        </nav>
+        <h3 class="fw-bold mb-0">Sponsors & Partners</h3>
+    </div>
+</div>
+
+<div class="container py-5">
+    {% if sponsors %}
+    {% regroup sponsors by tier as tier_groups %}
+    {% for group in tier_groups %}
+    <div class="mb-5">
+        <div class="d-flex align-items-center gap-3 mb-4">
+            <h4 class="fw-bold mb-0 text-capitalize">{{ group.grouper }}</h4>
+            <div style="flex:1;height:1px;background:var(--es-border);"></div>
+            <span class="badge {% if group.grouper == 'platinum' %}bg-light text-dark{% elif group.grouper == 'gold' %}bg-warning text-dark{% elif group.grouper == 'silver' %}bg-secondary{% else %}bg-dark border{% endif %}">
+                {{ group.list|length }} sponsor{{ group.list|length|pluralize }}
+            </span>
+        </div>
+        <div class="row gy-4">
+            {% for sponsor in group.list %}
+            <div class="col-lg-{% if group.grouper == 'platinum' %}6{% elif group.grouper == 'gold' %}4{% else %}3{% endif %} col-md-6">
+                <div class="card p-4 sponsor-{{ sponsor.tier }} text-center h-100">
+                    {% if sponsor.logo %}
+                    <img src="{{ sponsor.logo.url }}" style="max-height:80px;object-fit:contain;margin:0 auto 1rem;" alt="{{ sponsor.name }}">
+                    {% else %}
+                    <div style="width:80px;height:80px;background:rgba(255,255,255,0.08);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem;font-size:2rem;font-weight:700;">{{ sponsor.name|first }}</div>
+                    {% endif %}
+                    <h5 class="fw-bold mb-1">{{ sponsor.name }}</h5>
+                    {% if sponsor.description %}<p class="text-muted small mb-3">{{ sponsor.description }}</p>{% endif %}
+                    {% if sponsor.booth_info %}
+                    <div class="p-2 rounded-2 mb-3 text-start" style="background:rgba(255,255,255,0.04);">
+                        <small class="text-muted"><i class="bi bi-shop me-1"></i>{{ sponsor.booth_info }}</small>
+                    </div>
+                    {% endif %}
+                    {% if sponsor.website %}
+                    <a href="{{ sponsor.website }}" class="btn btn-sm btn-outline-primary mt-auto" target="_blank">
+                        <i class="bi bi-globe me-1"></i>Visit Website
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-building fs-1 text-muted mb-3 d-block"></i>
+        <h6 class="fw-bold">Sponsor announcements coming soon</h6>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

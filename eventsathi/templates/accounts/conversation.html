@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Chat with {{ other_user.get_full_name|default:other_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-4" style="max-width:720px;">
+    <div class="d-flex align-items-center gap-3 mb-4">
+        <a href="{% url 'messages_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
+        <div class="speaker-avatar" style="width:44px;height:44px;font-size:1rem;">
+            {{ other_user.first_name|first|upper }}{{ other_user.last_name|first|upper }}
+        </div>
+        <div>
+            <div class="fw-bold">{{ other_user.get_full_name|default:other_user.username }}</div>
+            {% if other_user.profile.designation %}<small class="text-muted">{{ other_user.profile.designation }}</small>{% endif %}
+        </div>
+    </div>
+
+    <div class="card mb-3">
+        <div class="messages-container" id="messagesContainer">
+            {% if messages %}
+            {% for msg in messages %}
+            <div class="d-flex {% if msg.sender == request.user %}justify-content-end{% endif %}">
+                <div class="message-bubble {% if msg.sender == request.user %}message-mine{% else %}message-other{% endif %}">
+                    {{ msg.content }}
+                    <div class="text-end mt-1" style="opacity:0.6;font-size:0.7rem;">{{ msg.created_at|date:"g:i A" }}</div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center text-muted py-3 small">Start the conversation!</div>
+            {% endif %}
+        </div>
+        <div class="p-3 border-top" style="border-color:var(--es-border) !important;">
+            <form method="post" class="d-flex gap-2 align-items-end">
+                {% csrf_token %}
+                {{ form.content }}
+                <button type="submit" class="btn btn-primary px-3 flex-shrink-0">
+                    <i class="bi bi-send"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="{% url 'network_hub' %}" class="text-muted text-decoration-none small">
+            <i class="bi bi-people me-1"></i>Back to Network Hub
+        </a>
+    </div>
+</div>
+
+<script>
+// Auto scroll to bottom
+const container = document.getElementById('messagesContainer');
+if (container) container.scrollTop = container.scrollHeight;
+</script>
+
+<style>
+#id_content { width:100%; border-radius:12px; resize:none; }
+</style>
+{% endblock %}

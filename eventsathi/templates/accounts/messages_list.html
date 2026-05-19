@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% block title %}Messages{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:720px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0"><i class="bi bi-chat-dots me-2"></i>Messages</h4>
+        <a href="{% url 'attendees_list' %}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-person-plus me-1"></i>New Message
+        </a>
+    </div>
+
+    {% if conversations %}
+    <div class="d-flex flex-column gap-3">
+        {% for convo in conversations %}
+        <a href="{% url 'conversation' convo.user.id %}" class="card p-4 text-decoration-none attendee-card">
+            <div class="d-flex align-items-center gap-3">
+                <div class="position-relative">
+                    <div class="speaker-avatar" style="width:52px;height:52px;font-size:1.1rem;flex-shrink:0;">
+                        {{ convo.user.first_name|first|upper }}{{ convo.user.last_name|first|upper }}
+                    </div>
+                    {% if convo.unread > 0 %}
+                    <div style="position:absolute;top:-2px;right:-2px;width:18px;height:18px;background:#ef4444;border-radius:50%;font-size:0.6rem;display:flex;align-items:center;justify-content:center;color:white;font-weight:700;">{{ convo.unread }}</div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1 min-width-0">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="fw-semibold">{{ convo.user.get_full_name|default:convo.user.username }}</span>
+                        <small class="text-muted">{{ convo.last_message.created_at|timesince }} ago</small>
+                    </div>
+                    <p class="text-muted small mb-0 text-truncate">
+                        {% if convo.last_message.sender == request.user %}You: {% endif %}
+                        {{ convo.last_message.content|truncatechars:50 }}
+                    </p>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-chat-dots fs-1 text-muted mb-3 d-block"></i>
+        <h5 class="fw-bold">No messages yet</h5>
+        <p class="text-muted">Start a conversation with someone from the networking hub or attendee directory.</p>
+        <a href="{% url 'network_hub' %}" class="btn btn-primary">Go to Network Hub</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

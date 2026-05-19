@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+{% block title %}Ticket - {{ registration.ticket_id }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:600px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h4 class="fw-bold mb-0">Your Ticket</h4>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" onclick="window.print()">
+                <i class="bi bi-printer me-1"></i>Print
+            </button>
+            <a href="{% url 'my_tickets' %}" class="btn btn-outline-primary btn-sm">All Tickets</a>
+        </div>
+    </div>
+
+    <div class="ticket-card p-0 overflow-hidden">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,var(--es-primary),#2d1b8e);padding:2rem;">
+            <div class="d-flex justify-content-between align-items-start">
+                <div>
+                    <div class="text-warning fw-bold small mb-1"><i class="bi bi-calendar-event-fill me-1"></i>EventSathi</div>
+                    <h4 class="text-white fw-bold mb-1">{{ registration.event.title }}</h4>
+                    <small class="text-white opacity-75">{{ registration.event.start_date|date:"D, d M Y" }}</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge bg-white text-dark fw-bold px-3 py-2">{{ registration.ticket_tier.name }}</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4">
+            <!-- QR Code -->
+            <div class="text-center mb-4">
+                {% if registration.qr_code %}
+                <img src="data:image/png;base64,{{ registration.qr_code }}" style="width:200px;height:200px;border-radius:12px;padding:8px;background:white;" alt="QR Code">
+                {% endif %}
+                <div class="mt-2 text-muted small">Scan for entry</div>
+            </div>
+
+            <div class="ticket-divider"></div>
+
+            <div class="row gy-3">
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Ticket ID</div>
+                    <div class="fw-bold">
+                        {{ registration.ticket_id }}
+                        <button id="copyBtn" class="btn btn-sm btn-outline-secondary ms-2 py-0 px-2" onclick="copyTicketId('{{ registration.ticket_id }}')">
+                            <i class="bi bi-clipboard" style="font-size:0.7rem;"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Status</div>
+                    <span class="badge badge-status-{{ registration.status }}">{{ registration.get_status_display }}</span>
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Attendee</div>
+                    <div class="fw-semibold">{{ registration.user.get_full_name|default:registration.user.username }}</div>
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Ticket Type</div>
+                    <div class="fw-semibold">{{ registration.ticket_tier.name }}</div>
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Date</div>
+                    <div class="fw-semibold">{{ registration.event.start_date|date:"d M Y" }}</div>
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Venue</div>
+                    <div class="fw-semibold">{{ registration.event.venue }}</div>
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Amount Paid</div>
+                    <div class="fw-semibold {% if registration.amount_paid == 0 %}text-success{% endif %}">
+                        {% if registration.amount_paid == 0 %}Free{% else %}₹{{ registration.amount_paid|floatformat:0 }}{% endif %}
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="text-muted small mb-1">Registered</div>
+                    <div class="fw-semibold">{{ registration.registered_at|date:"d M Y, g:i A" }}</div>
+                </div>
+            </div>
+
+            {% if registration.status == 'checked_in' %}
+            <div class="alert alert-success mt-3 text-center">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                Checked in at {{ registration.checked_in_at|date:"g:i A, d M Y" }}
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Footer -->
+        <div class="p-4 pt-0 text-center">
+            <small class="text-muted">Present this ticket (QR code) at the venue for entry. This ticket is non-transferable.</small>
+        </div>
+    </div>
+
+    <div class="mt-4 text-center">
+        <a href="{% url 'event_detail' registration.event.slug %}" class="btn btn-outline-primary me-2">
+            <i class="bi bi-calendar-event me-1"></i>Event Details
+        </a>
+        <a href="{% url 'event_agenda' registration.event.slug %}" class="btn btn-primary">
+            <i class="bi bi-list-check me-1"></i>View Schedule
+        </a>
+    </div>
+</div>
+
+<style>
+@media print {
+    #mainNav, footer, .btn, .breadcrumb { display: none !important; }
+    body { background: white !important; }
+    .ticket-card { box-shadow: none !important; }
+}
+</style>
+{% endblock %}

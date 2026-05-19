@@ -1,45 +1,78 @@
-# [Project name]
+# EventSathi
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A comprehensive Django web application for end-to-end university event management. Handles smart ticketing with QR codes, event agenda/sessions, speaker directory, live Q&A & polls, networking hub, organizer analytics dashboard, announcements, sponsor management, and hybrid/virtual event support.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- **Start app**: workflow "Start application" → `cd eventsathi && python manage.py runserver 0.0.0.0:8000`
+- **Migrations**: `cd eventsathi && python manage.py makemigrations && python manage.py migrate`
+- **Seed data**: `cd eventsathi && python manage.py shell < seed_data.py`
+- **Create superuser**: `cd eventsathi && python manage.py createsuperuser`
+
+## Demo Credentials
+
+| Role | Username | Password |
+|------|----------|----------|
+| Superuser/Admin | `admin` | `admin123` |
+| Organizer | `rahul` | `demo123` |
+| Attendee | `priya` | `demo123` |
 
 ## Stack
 
-- pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Python 3.11, Django 5.2
+- SQLite (dev) — switch to PostgreSQL for production via `DATABASE_URL`
+- Bootstrap 5.3 (CDN), Bootstrap Icons, custom dark theme
+- QR code generation: `qrcode` + Pillow
+- Static files: WhiteNoise
+- Forms: `django-crispy-forms` + `crispy-bootstrap5`, `django-widget-tweaks`
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+```
+eventsathi/
+├── eventsathi/         # Django project settings, urls, wsgi
+├── accounts/           # User profiles, networking, messages, connections
+├── events/             # Events, tickets, sessions, speakers, sponsors, polls, Q&A
+├── templates/
+│   ├── base.html       # Global layout with navbar, messages, JS helpers
+│   ├── accounts/       # profile, network hub, messages, conversation, attendees
+│   └── events/         # home, event CRUD, agenda, speakers, sponsors,
+│                       # session detail (Q&A+polls), ticket, manage/*
+├── static/
+│   ├── css/style.css   # Dark theme — CSS vars, components, responsive
+│   └── js/main.js      # QR copy, stat counters, tier selection, polls
+└── media/              # Uploaded banners, speaker photos, sponsor logos
+```
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **Slug-based event URLs** — events are identified by slug (e.g. `/events/techfest-2024/`), never by numeric IDs in URLs
+- **QR codes stored as Base64** in the `Registration.qr_code` field — no separate file, rendered directly in ticket template
+- **UserProfile via signals** — auto-created on new User registration via `post_save` signal
+- **PollVote deduplication** handled at view level (query before inserting), not via DB unique_together since that requires `choice__poll` traversal
+- **CSRF trusted origins + proxy headers** set for Replit's mTLS proxy (`SECURE_PROXY_SSL_HEADER`, `CSRF_TRUSTED_ORIGINS`)
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Attendees**: Browse events, register with tiered tickets, view QR ticket, build personal schedule, join Q&A, vote in polls, network with other attendees
+- **Organizers**: Create & publish events, manage ticket tiers/sessions/speakers/sponsors/announcements, QR check-in portal, analytics dashboard
+- **Sessions**: Per-session Q&A with upvoting, live polls with real-time results, optional stream/recording links
+- **Networking**: Connection requests, direct messaging, attendee directory with interest-based matching
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- Dark purple/gold theme — `--es-primary: #6c3de1`, Inter/Poppins fonts, Bootstrap 5.3
+- Indian locale: `TIME_ZONE = 'Asia/Kolkata'`, prices shown in ₹
+- University project context — feature-rich but intentionally uses SQLite for simplicity
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- `ALLOWED_HOSTS = ['*']` and `CSRF_TRUSTED_ORIGINS` must include Replit's domains for the proxy to work
+- Static files use WhiteNoise — run `collectstatic` before production deployment
+- QR code generation requires `qrcode[pil]` (Pillow) — already installed
+- The `accounts` app imports from `events.models` (Registration) — migration order matters: migrate `accounts` first, then `events`
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Admin panel: `/admin/` (login as `admin` / `admin123`)
+- See the `pnpm-workspace` skill for workspace structure details

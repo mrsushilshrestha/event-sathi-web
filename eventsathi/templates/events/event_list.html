@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+{% block title %}Browse Events{% endblock %}
+
+{% block content %}
+<div class="py-5" style="background:var(--es-dark-2); border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <h2 class="fw-bold mb-1">Browse Events</h2>
+        <p class="text-muted mb-4">Discover conferences, workshops, hackathons and more</p>
+        <form method="get" class="row g-3">
+            <div class="col-lg-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-dark border-secondary text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search events, cities, topics...">
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <select name="category" class="form-select">
+                    <option value="">All Categories</option>
+                    {% for val, label in categories %}
+                    <option value="{{ val }}" {% if category == val %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <select name="mode" class="form-select">
+                    <option value="">All Modes</option>
+                    <option value="in-person" {% if mode == 'in-person' %}selected{% endif %}>In-Person</option>
+                    <option value="virtual" {% if mode == 'virtual' %}selected{% endif %}>Virtual</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <button type="submit" class="btn btn-primary w-100">Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="container py-5">
+    {% if events %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <p class="text-muted mb-0">{{ events|length }} event{{ events|length|pluralize }} found</p>
+        {% if query or category or mode %}
+        <a href="{% url 'event_list' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x-circle me-1"></i>Clear Filters
+        </a>
+        {% endif %}
+    </div>
+    <div class="row gy-4">
+        {% for event in events %}
+        <div class="col-lg-4 col-md-6">
+            <div class="card event-card h-100">
+                {% if event.banner %}
+                <img src="{{ event.banner.url }}" class="card-img-top" alt="{{ event.title }}">
+                {% else %}
+                <div class="event-card-placeholder">
+                    <i class="bi bi-calendar-event"></i>
+                </div>
+                {% endif %}
+                <div class="card-body p-4">
+                    <div class="d-flex flex-wrap gap-2 mb-2">
+                        <span class="badge badge-category">{{ event.get_category_display }}</span>
+                        <span class="badge badge-status-{{ event.status }}">{{ event.get_status_display }}</span>
+                        {% if event.is_virtual %}<span class="badge" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);">Virtual</span>{% endif %}
+                        {% if event.is_featured %}<span class="badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);"><i class="bi bi-star-fill me-1"></i>Featured</span>{% endif %}
+                    </div>
+                    <h5 class="fw-bold mb-2">{{ event.title }}</h5>
+                    <p class="text-muted small mb-3">{{ event.description|truncatewords:20 }}</p>
+                    <div class="d-flex flex-column gap-1 mb-3">
+                        <small class="text-muted"><i class="bi bi-calendar3 me-2"></i>{{ event.start_date|date:"D, d M Y, g:i A" }}</small>
+                        <small class="text-muted"><i class="bi bi-geo-alt me-2"></i>{{ event.venue }}, {{ event.city }}</small>
+                        <small class="text-muted">
+                            <i class="bi bi-people me-2"></i>
+                            {{ event.get_registered_count }} / {{ event.max_capacity }}
+                            <div class="progress mt-1" style="height:4px;">
+                                <div class="progress-bar" style="width:{% widthratio event.get_registered_count event.max_capacity 100 %}%"></div>
+                            </div>
+                        </small>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        {% with tier=event.ticket_tiers.first %}
+                        {% if tier %}
+                        <span class="fw-semibold text-white">
+                            {% if tier.price == 0 %}<span class="text-success">Free</span>{% else %}From ₹{{ tier.price|floatformat:0 }}{% endif %}
+                        </span>
+                        {% else %}<span></span>{% endif %}
+                        {% endwith %}
+                        <a href="{% url 'event_detail' event.slug %}" class="btn btn-primary btn-sm px-4">View Event</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <i class="bi bi-calendar-x fs-1 text-muted mb-3 d-block"></i>
+        <h5 class="fw-bold">No events found</h5>
+        <p class="text-muted">Try adjusting your filters or <a href="{% url 'event_create' %}" class="text-warning">create a new event</a>.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

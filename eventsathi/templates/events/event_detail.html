@@ -1,0 +1,237 @@
+{% extends 'base.html' %}
+{% block title %}{{ event.title }}{% endblock %}
+
+{% block content %}
+<!-- Hero Banner -->
+<div style="background:linear-gradient(135deg,var(--es-dark-2),#0d0d24);border-bottom:1px solid var(--es-border);">
+    {% if event.banner %}
+    <div style="height:350px;overflow:hidden;position:relative;">
+        <img src="{{ event.banner.url }}" style="width:100%;height:100%;object-fit:cover;opacity:0.4;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,var(--es-dark) 20%,transparent 70%);"></div>
+    </div>
+    {% endif %}
+    <div class="container py-4">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{% url 'event_list' %}" class="text-muted text-decoration-none">Events</a></li>
+                <li class="breadcrumb-item active text-muted">{{ event.title|truncatewords:5 }}</li>
+            </ol>
+        </nav>
+        <div class="row align-items-start">
+            <div class="col-lg-8">
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="badge badge-category">{{ event.get_category_display }}</span>
+                    <span class="badge badge-status-{{ event.status }}">{{ event.get_status_display }}</span>
+                    {% if event.is_virtual %}<span class="badge" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);"><i class="bi bi-camera-video me-1"></i>Virtual/Hybrid</span>{% endif %}
+                    {% if event.is_featured %}<span class="badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);"><i class="bi bi-star-fill me-1"></i>Featured</span>{% endif %}
+                </div>
+                <h1 class="fw-bold text-white mb-3">{{ event.title }}</h1>
+                <div class="d-flex flex-wrap gap-4 mb-4">
+                    <div class="d-flex align-items-center gap-2 text-muted">
+                        <i class="bi bi-calendar3 text-warning"></i>
+                        <span>{{ event.start_date|date:"D, d M Y, g:i A" }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-muted">
+                        <i class="bi bi-geo-alt text-warning"></i>
+                        <span>{{ event.venue }}, {{ event.city }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2 text-muted">
+                        <i class="bi bi-people text-warning"></i>
+                        <span>{{ event.get_registered_count }} / {{ event.max_capacity }} registered</span>
+                    </div>
+                </div>
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'event_agenda' event.slug %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list-check me-1"></i>Agenda
+                    </a>
+                    <a href="{% url 'event_speakers' event.slug %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-mic me-1"></i>Speakers
+                    </a>
+                    <a href="{% url 'event_sponsors' event.slug %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-building me-1"></i>Sponsors
+                    </a>
+                    {% if user == event.organizer %}
+                    <a href="{% url 'event_manage' event.slug %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-gear me-1"></i>Manage Event
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="col-lg-4 mt-4 mt-lg-0">
+                <div class="card p-4">
+                    {% if is_registered %}
+                    <div class="text-center mb-3">
+                        <div class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);font-size:0.9rem;padding:8px 16px;">
+                            <i class="bi bi-check-circle me-2"></i>You're registered!
+                        </div>
+                    </div>
+                    <a href="{% url 'view_ticket' registration.ticket_id %}" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-qr-code me-2"></i>View My Ticket
+                    </a>
+                    {% elif event.is_registration_open %}
+                    <h6 class="fw-bold mb-3">Get Your Ticket</h6>
+                    {% for tier in tiers %}
+                    <div class="d-flex justify-content-between align-items-center p-3 mb-2 rounded-3" style="background:rgba(255,255,255,0.04);border:1px solid var(--es-border);">
+                        <div>
+                            <div class="fw-semibold small">{{ tier.name }}</div>
+                            <small class="text-muted">{{ tier.get_available }} seats left</small>
+                        </div>
+                        <div class="fw-bold {% if tier.price == 0 %}text-success{% else %}text-white{% endif %}">
+                            {% if tier.price == 0 %}Free{% else %}₹{{ tier.price|floatformat:0 }}{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% if user.is_authenticated %}
+                    <a href="{% url 'event_register' event.slug %}" class="btn btn-primary w-100 mt-2">
+                        <i class="bi bi-ticket-perforated me-2"></i>Register Now
+                    </a>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-100 mt-2">
+                        Login to Register
+                    </a>
+                    {% endif %}
+                    {% else %}
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-lock fs-2 mb-2 d-block"></i>
+                        Registration is closed
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <div class="d-flex flex-column gap-2">
+                        <small class="text-muted"><i class="bi bi-clock me-2"></i>{{ event.start_date|date:"g:i A" }} — {{ event.end_date|date:"g:i A" }}</small>
+                        <small class="text-muted"><i class="bi bi-calendar-range me-2"></i>{{ event.start_date|date:"d M" }} — {{ event.end_date|date:"d M Y" }}</small>
+                        {% if event.is_virtual and event.virtual_link %}
+                        <small><i class="bi bi-camera-video me-2 text-info"></i><a href="{{ event.virtual_link }}" class="text-info" target="_blank">Join Online</a></small>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row gy-5">
+        <div class="col-lg-8">
+            <!-- About -->
+            <div class="mb-5">
+                <h4 class="fw-bold mb-3">About This Event</h4>
+                <div class="text-muted" style="line-height:1.8;white-space:pre-line;">{{ event.description }}</div>
+            </div>
+            {% if event.get_tags_list %}
+            <div class="d-flex flex-wrap gap-2 mb-5">
+                {% for tag in event.get_tags_list %}
+                <span class="badge badge-category"># {{ tag }}</span>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Announcements -->
+            {% if announcements %}
+            <div class="mb-5">
+                <h4 class="fw-bold mb-3"><i class="bi bi-megaphone me-2"></i>Latest Announcements</h4>
+                {% for ann in announcements %}
+                <div class="card p-4 mb-3 announcement-{{ ann.priority }}">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h6 class="fw-bold mb-0">{{ ann.title }}</h6>
+                        <span class="badge {% if ann.priority == 'urgent' %}bg-danger{% elif ann.priority == 'important' %}bg-warning text-dark{% else %}badge-category{% endif %}">{{ ann.get_priority_display }}</span>
+                    </div>
+                    <p class="text-muted small mb-1">{{ ann.content }}</p>
+                    <small class="text-muted">{{ ann.created_at|timesince }} ago</small>
+                </div>
+                {% endfor %}
+                <a href="{% url 'event_announcements' event.slug %}" class="text-warning text-decoration-none small">View all announcements →</a>
+            </div>
+            {% endif %}
+
+            <!-- Sessions preview -->
+            {% if sessions %}
+            <div class="mb-5">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0">Schedule Preview</h4>
+                    <a href="{% url 'event_agenda' event.slug %}" class="text-warning text-decoration-none small">Full Agenda →</a>
+                </div>
+                {% for session in sessions %}
+                <div class="card p-3 mb-2 track-{{ session.track }}">
+                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                        <div>
+                            <div class="fw-semibold">{{ session.title }}</div>
+                            {% if session.speaker %}<small class="text-muted"><i class="bi bi-mic me-1"></i>{{ session.speaker.name }}</small>{% endif %}
+                        </div>
+                        <div class="text-end">
+                            <small class="text-muted">{{ session.start_time|date:"g:i A" }} — {{ session.end_time|date:"g:i A" }}</small>
+                            {% if session.room %}<br><small class="text-muted"><i class="bi bi-door-open me-1"></i>{{ session.room }}</small>{% endif %}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Speakers preview -->
+            {% if speakers %}
+            <div>
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="fw-bold mb-0">Featured Speakers</h4>
+                    <a href="{% url 'event_speakers' event.slug %}" class="text-warning text-decoration-none small">All Speakers →</a>
+                </div>
+                <div class="row gy-3">
+                    {% for speaker in speakers %}
+                    <div class="col-md-4">
+                        <div class="card p-3 text-center speaker-card">
+                            {% if speaker.photo %}
+                            <img src="{{ speaker.photo.url }}" class="speaker-photo mx-auto mb-2" alt="{{ speaker.name }}">
+                            {% else %}
+                            <div class="speaker-avatar mx-auto mb-2" style="width:70px;height:70px;font-size:1.5rem;">{{ speaker.name|first|upper }}</div>
+                            {% endif %}
+                            <div class="fw-semibold small">{{ speaker.name }}</div>
+                            <div class="text-muted" style="font-size:0.75rem;">{{ speaker.designation }}</div>
+                            {% if speaker.organization %}<div class="text-muted" style="font-size:0.75rem;">{{ speaker.organization }}</div>{% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-lg-4">
+            <!-- Organizer -->
+            <div class="card p-4 mb-4">
+                <h6 class="fw-bold mb-3">Organized by</h6>
+                <div class="d-flex align-items-center gap-3">
+                    <div class="avatar-sm" style="width:44px;height:44px;font-size:1rem;">
+                        {{ event.organizer.first_name|first|upper }}{{ event.organizer.last_name|first|upper }}
+                    </div>
+                    <div>
+                        <div class="fw-semibold">{{ event.organizer.get_full_name|default:event.organizer.username }}</div>
+                        <small class="text-muted">Event Organizer</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sponsors -->
+            {% if sponsors %}
+            <div class="card p-4">
+                <h6 class="fw-bold mb-3">Sponsors & Partners</h6>
+                {% for sponsor in sponsors %}
+                <div class="d-flex align-items-center gap-3 mb-2 p-2 rounded-2" style="background:rgba(255,255,255,0.03);">
+                    {% if sponsor.logo %}
+                    <img src="{{ sponsor.logo.url }}" style="height:32px;object-fit:contain;" alt="{{ sponsor.name }}">
+                    {% else %}
+                    <div style="width:32px;height:32px;background:rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:0.75rem;">{{ sponsor.name|first }}</div>
+                    {% endif %}
+                    <div>
+                        <div class="fw-semibold small">{{ sponsor.name }}</div>
+                        <span class="badge" style="font-size:0.65rem;background:rgba(245,158,11,0.15);color:#fbbf24;">{{ sponsor.get_tier_display }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+                <a href="{% url 'event_sponsors' event.slug %}" class="text-warning text-decoration-none small d-block mt-2">View all sponsors →</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

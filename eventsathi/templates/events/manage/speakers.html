@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+{% block title %}Speakers - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container"><h4 class="fw-bold mb-0">Manage Speakers</h4><small class="text-muted">{{ event.title }}</small></div>
+</div>
+<div class="container py-4">
+    <div class="row gy-4">
+        <div class="col-lg-3">
+            <div class="card p-3 manage-sidebar">
+                <nav class="nav flex-column gap-1">
+                    <a class="nav-link" href="{% url 'event_manage' event.slug %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
+                    <a class="nav-link" href="{% url 'manage_tickets' event.slug %}"><i class="bi bi-ticket me-2"></i>Ticket Tiers</a>
+                    <a class="nav-link active" href="{% url 'manage_speakers' event.slug %}"><i class="bi bi-mic me-2"></i>Speakers</a>
+                    <a class="nav-link" href="{% url 'manage_sessions' event.slug %}"><i class="bi bi-list-check me-2"></i>Sessions</a>
+                    <a class="nav-link" href="{% url 'manage_sponsors' event.slug %}"><i class="bi bi-building me-2"></i>Sponsors</a>
+                    <a class="nav-link" href="{% url 'manage_announcements' event.slug %}"><i class="bi bi-megaphone me-2"></i>Announcements</a>
+                    <hr class="border-secondary">
+                    <a class="nav-link" href="{% url 'check_in' event.slug %}"><i class="bi bi-qr-code-scan me-2"></i>Check-In Portal</a>
+                    <a class="nav-link" href="{% url 'event_analytics' event.slug %}"><i class="bi bi-bar-chart-line me-2"></i>Analytics</a>
+                </nav>
+            </div>
+        </div>
+        <div class="col-lg-9">
+            <div class="card p-4 mb-4">
+                <h5 class="fw-bold mb-3">Add Speaker</h5>
+                <form method="post" enctype="multipart/form-data" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-md-6"><label class="form-label small">Name *</label>{{ form.name }}</div>
+                        <div class="col-md-6"><label class="form-label small">Designation *</label>{{ form.designation }}</div>
+                        <div class="col-md-6"><label class="form-label small">Organization</label>{{ form.organization }}</div>
+                        <div class="col-md-6"><label class="form-label small">Photo</label>{{ form.photo }}</div>
+                        <div class="col-12"><label class="form-label small">Bio</label>{{ form.bio }}</div>
+                        <div class="col-12"><label class="form-label small">Session Abstract</label>{{ form.abstract }}</div>
+                        <div class="col-md-4"><label class="form-label small">LinkedIn</label>{{ form.linkedin }}</div>
+                        <div class="col-md-4"><label class="form-label small">Twitter</label>{{ form.twitter }}</div>
+                        <div class="col-md-4"><label class="form-label small">Website</label>{{ form.website }}</div>
+                    </div>
+                    <button type="submit" class="btn btn-primary mt-3 px-4">Add Speaker</button>
+                </form>
+            </div>
+            {% if speakers %}
+            <div class="row gy-3">
+                {% for speaker in speakers %}
+                <div class="col-md-6">
+                    <div class="card p-3">
+                        <div class="d-flex gap-3">
+                            {% if speaker.photo %}<img src="{{ speaker.photo.url }}" style="width:50px;height:50px;border-radius:50%;object-fit:cover;" alt="">
+                            {% else %}<div class="speaker-avatar" style="width:50px;height:50px;font-size:1.1rem;flex-shrink:0;">{{ speaker.name|first|upper }}</div>{% endif %}
+                            <div>
+                                <div class="fw-bold">{{ speaker.name }}</div>
+                                <small class="text-muted">{{ speaker.designation }}</small>
+                                {% if speaker.organization %}<small class="text-muted d-block">{{ speaker.organization }}</small>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+<style>input, textarea, select { width:100%; display:block; }</style>
+{% endblock %}

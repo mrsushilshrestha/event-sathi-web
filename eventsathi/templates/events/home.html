@@ -1,0 +1,249 @@
+{% extends 'base.html' %}
+{% block title %}Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="container position-relative" style="z-index:1;">
+        <div class="row align-items-center gy-5">
+            <div class="col-lg-7">
+                <div class="section-badge mb-3">Your Digital Event Companion</div>
+                <h1 class="hero-title text-white mb-4">
+                    Manage Events<br>
+                    <span class="gradient-text">End-to-End</span><br>
+                    Effortlessly
+                </h1>
+                <p class="text-secondary fs-5 mb-4" style="max-width:500px;">
+                    From ticket booking to live Q&A, from speaker profiles to real-time analytics — EventSathi bridges organizers, attendees, speakers, and sponsors.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="{% url 'event_list' %}" class="btn btn-primary btn-lg px-5 py-3">
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Browse Events
+                    </a>
+                    {% if not user.is_authenticated %}
+                    <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg px-5 py-3">
+                        Get Started Free
+                    </a>
+                    {% else %}
+                    <a href="{% url 'event_create' %}" class="btn btn-warning btn-lg px-5 py-3">
+                        <i class="bi bi-plus-circle me-2"></i>Create Event
+                    </a>
+                    {% endif %}
+                </div>
+                <div class="d-flex gap-5 mt-5">
+                    <div>
+                        <div class="stat-number fs-2 fw-bold text-white stat-counter" data-target="{{ total_events }}">0</div>
+                        <div class="stat-label">Events Hosted</div>
+                    </div>
+                    <div>
+                        <div class="stat-number fs-2 fw-bold text-white stat-counter" data-target="{{ total_registrations }}">0</div>
+                        <div class="stat-label">Registrations</div>
+                    </div>
+                    <div>
+                        <div class="stat-number fs-2 fw-bold text-white">100%</div>
+                        <div class="stat-label">Paperless</div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="position-relative">
+                    <div class="card p-4 shadow-lg" style="border-radius:20px; transform: rotate(-2deg);">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6c3de1,#f59e0b);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                                <i class="bi bi-calendar-event text-white fs-5"></i>
+                            </div>
+                            <div>
+                                <div class="fw-bold">Tech Summit 2024</div>
+                                <small class="text-muted">800 attendees registered</small>
+                            </div>
+                        </div>
+                        <div class="progress mb-2" style="height:6px;">
+                            <div class="progress-bar" style="width:80%"></div>
+                        </div>
+                        <small class="text-muted">80% capacity filled</small>
+                        <div class="d-flex gap-2 mt-3">
+                            <span class="badge badge-category"><i class="bi bi-camera-video me-1"></i>Live Stream</span>
+                            <span class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);">Open</span>
+                        </div>
+                    </div>
+                    <div class="card p-3 shadow" style="position:absolute;bottom:-30px;right:-20px;border-radius:16px;min-width:180px;">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle bg-success d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
+                                <i class="bi bi-qr-code text-white"></i>
+                            </div>
+                            <div>
+                                <div class="fw-semibold small">QR Check-In</div>
+                                <small class="text-muted">342 scanned today</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section class="py-5" style="background:var(--es-dark-2);">
+    <div class="container">
+        <div class="text-center section-header">
+            <div class="section-badge">Features</div>
+            <h2 class="section-title mt-2">Everything You Need</h2>
+        </div>
+        <div class="row gy-4">
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 h-100">
+                    <div class="mb-3" style="width:48px;height:48px;background:rgba(108,61,225,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-ticket-perforated fs-4" style="color:#a78bfa;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Smart Ticketing</h5>
+                    <p class="text-muted small mb-0">Multi-tier tickets with QR codes. General, VIP, Early Bird — with secure payments and instant confirmation.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 h-100">
+                    <div class="mb-3" style="width:48px;height:48px;background:rgba(16,185,129,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-qr-code-scan fs-4" style="color:#34d399;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">QR Check-In</h5>
+                    <p class="text-muted small mb-0">Paperless on-site entry. Scan QR tickets for instant validation with real-time attendance tracking.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 h-100">
+                    <div class="mb-3" style="width:48px;height:48px;background:rgba(59,130,246,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-people fs-4" style="color:#60a5fa;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Networking Hub</h5>
+                    <p class="text-muted small mb-0">Connect with peers, discover shared interests, exchange digital business cards and direct message.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 h-100">
+                    <div class="mb-3" style="width:48px;height:48px;background:rgba(245,158,11,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-bar-chart-line fs-4" style="color:#fbbf24;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Analytics Dashboard</h5>
+                    <p class="text-muted small mb-0">Real-time registrations, check-in rates, revenue tracking, and sponsor ROI reports for organizers.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 h-100">
+                    <div class="mb-3" style="width:48px;height:48px;background:rgba(236,72,153,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-chat-dots fs-4" style="color:#f472b6;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Live Q&A & Polls</h5>
+                    <p class="text-muted small mb-0">Engage your audience with real-time polls and moderated Q&A — turn passive viewers into participants.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 col-md-6">
+                <div class="card p-4 h-100">
+                    <div class="mb-3" style="width:48px;height:48px;background:rgba(6,182,212,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
+                        <i class="bi bi-camera-video fs-4" style="color:#22d3ee;"></i>
+                    </div>
+                    <h5 class="fw-bold mb-2">Hybrid Events</h5>
+                    <p class="text-muted small mb-0">Stream live sessions and archive recordings. Support both in-person and remote attendees seamlessly.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Events -->
+{% if featured_events or upcoming_events %}
+<section class="py-5">
+    <div class="container">
+        {% if featured_events %}
+        <div class="section-header d-flex justify-content-between align-items-end">
+            <div>
+                <div class="section-badge">Featured</div>
+                <h2 class="section-title mt-2">Spotlight Events</h2>
+            </div>
+            <a href="{% url 'event_list' %}" class="btn btn-outline-primary">View All</a>
+        </div>
+        <div class="row gy-4 mb-5">
+            {% for event in featured_events %}
+            <div class="col-lg-4">
+                <div class="card event-card h-100">
+                    {% if event.banner %}
+                    <img src="{{ event.banner.url }}" class="card-img-top" alt="{{ event.title }}">
+                    {% else %}
+                    <div class="event-card-placeholder">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <span class="badge badge-category">{{ event.get_category_display }}</span>
+                            {% if event.is_virtual %}<span class="badge" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);">Virtual</span>{% endif %}
+                        </div>
+                        <h5 class="fw-bold mb-2">{{ event.title }}</h5>
+                        <p class="text-muted small mb-3">{{ event.description|truncatewords:15 }}</p>
+                        <div class="d-flex flex-column gap-1 mb-3">
+                            <small class="text-muted"><i class="bi bi-calendar3 me-2"></i>{{ event.start_date|date:"D, d M Y" }}</small>
+                            <small class="text-muted"><i class="bi bi-geo-alt me-2"></i>{{ event.venue }}, {{ event.city }}</small>
+                            <small class="text-muted"><i class="bi bi-people me-2"></i>{{ event.get_registered_count }} / {{ event.max_capacity }} registered</small>
+                        </div>
+                        <a href="{% url 'event_detail' event.slug %}" class="btn btn-primary w-100">View Event</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="section-header d-flex justify-content-between align-items-end">
+            <div>
+                <div class="section-badge">Upcoming</div>
+                <h2 class="section-title mt-2">Don't Miss Out</h2>
+            </div>
+            <a href="{% url 'event_list' %}" class="btn btn-outline-primary">View All</a>
+        </div>
+        <div class="row gy-4">
+            {% for event in upcoming_events %}
+            <div class="col-lg-4 col-md-6">
+                <div class="card event-card h-100">
+                    {% if event.banner %}
+                    <img src="{{ event.banner.url }}" class="card-img-top" alt="{{ event.title }}">
+                    {% else %}
+                    <div class="event-card-placeholder">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    {% endif %}
+                    <div class="card-body p-4">
+                        <div class="mb-2">
+                            <span class="badge badge-category">{{ event.get_category_display }}</span>
+                            {% if event.is_virtual %}<span class="badge ms-1" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);">Virtual</span>{% endif %}
+                        </div>
+                        <h6 class="fw-bold mb-2">{{ event.title }}</h6>
+                        <div class="d-flex flex-column gap-1 mb-3">
+                            <small class="text-muted"><i class="bi bi-calendar3 me-2"></i>{{ event.start_date|date:"D, d M Y" }}</small>
+                            <small class="text-muted"><i class="bi bi-geo-alt me-2"></i>{{ event.city }}</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <small class="text-muted">{{ event.get_registered_count }} registered</small>
+                            <a href="{% url 'event_detail' event.slug %}" class="btn btn-sm btn-primary px-3">View</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+<!-- CTA -->
+{% if not user.is_authenticated %}
+<section class="py-5" style="background:linear-gradient(135deg, rgba(108,61,225,0.15), rgba(245,158,11,0.1));">
+    <div class="container text-center">
+        <h2 class="section-title mb-3">Ready to Host Your Event?</h2>
+        <p class="text-muted mb-4">Join thousands of organizers who trust EventSathi for seamless event management.</p>
+        <div class="d-flex justify-content-center gap-3 flex-wrap">
+            <a href="{% url 'register' %}" class="btn btn-primary btn-lg px-5">Create Free Account</a>
+            <a href="{% url 'event_list' %}" class="btn btn-outline-light btn-lg px-5">Browse Events</a>
+        </div>
+    </div>
+</section>
+{% endif %}
+{% endblock %}
