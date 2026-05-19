@@ -65,6 +65,22 @@ class Event(models.Model):
             return [t.strip() for t in self.tags.split(',') if t.strip()]
         return []
 
+    def get_min_price(self):
+        tiers = self.ticket_tiers.filter(is_active=True)
+        if not tiers.exists():
+            return None
+        prices = [t.price for t in tiers]
+        return min(prices)
+
+    def get_live_status(self):
+        now = timezone.now()
+        if self.status == 'ongoing' or (self.start_date <= now <= self.end_date):
+            return 'live'
+        elif self.status in ('completed',) or self.end_date < now:
+            return 'past'
+        else:
+            return 'upcoming'
+
 
 class TicketTier(models.Model):
     event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='ticket_tiers')

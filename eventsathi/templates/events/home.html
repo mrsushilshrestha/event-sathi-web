@@ -2,7 +2,80 @@
 {% block title %}Home{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
+
+<!-- ── EVENTS FIRST ──────────────────────────────────────────── -->
+{% if has_events %}
+<section class="py-5">
+    <div class="container">
+
+        <!-- LIVE NOW -->
+        {% if live_events %}
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <span class="badge mb-2 px-3 py-2" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.35);font-size:0.75rem;letter-spacing:.05em;">
+                        <span class="d-inline-block rounded-circle bg-danger me-1" style="width:7px;height:7px;animation:pulse 1.2s infinite;"></span>
+                        LIVE NOW
+                    </span>
+                    <h2 class="section-title mb-0">Happening Right Now</h2>
+                </div>
+                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            <div class="row gy-4">
+                {% for event in live_events %}
+                <div class="col-lg-3 col-md-6">
+                    {% include 'events/_event_card.html' with event=event status_label='live' %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- UPCOMING -->
+        {% if upcoming_events %}
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <span class="badge mb-2 px-3 py-2" style="background:rgba(108,61,225,0.15);color:#a78bfa;border:1px solid rgba(108,61,225,0.35);font-size:0.75rem;letter-spacing:.05em;">UPCOMING</span>
+                    <h2 class="section-title mb-0">Don't Miss These</h2>
+                </div>
+                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            <div class="row gy-4">
+                {% for event in upcoming_events %}
+                <div class="col-lg-3 col-md-6">
+                    {% include 'events/_event_card.html' with event=event status_label='upcoming' %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- PAST -->
+        {% if past_events %}
+        <div>
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <span class="badge mb-2 px-3 py-2" style="background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.35);font-size:0.75rem;letter-spacing:.05em;">PAST</span>
+                    <h2 class="section-title mb-0">Recently Concluded</h2>
+                </div>
+                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            <div class="row gy-4">
+                {% for event in past_events %}
+                <div class="col-lg-3 col-md-6">
+                    {% include 'events/_event_card.html' with event=event status_label='past' %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endif %}
+
+<!-- ── HERO ──────────────────────────────────────────────────── -->
 <section class="hero-section">
     <div class="container position-relative" style="z-index:1;">
         <div class="row align-items-center gy-5">
@@ -18,16 +91,20 @@
                 </p>
                 <div class="d-flex flex-wrap gap-3">
                     <a href="{% url 'event_list' %}" class="btn btn-primary btn-lg px-5 py-3">
-                        <i class="bi bi-grid-3x3-gap me-2"></i>Browse Events
+                        <i class="bi bi-grid-3x3-gap me-2"></i>Browse All Events
                     </a>
                     {% if not user.is_authenticated %}
                     <a href="{% url 'register' %}" class="btn btn-outline-light btn-lg px-5 py-3">
                         Get Started Free
                     </a>
                     {% else %}
+                    {% with profile=user.profile %}
+                    {% if profile.role == 'organizer' or user.is_staff %}
                     <a href="{% url 'event_create' %}" class="btn btn-warning btn-lg px-5 py-3">
-                        <i class="bi bi-plus-circle me-2"></i>Create Event
+                        <i class="bi bi-plus-circle me-2"></i>Post Event
                     </a>
+                    {% endif %}
+                    {% endwith %}
                     {% endif %}
                 </div>
                 <div class="d-flex gap-5 mt-5">
@@ -83,7 +160,7 @@
     </div>
 </section>
 
-<!-- Features -->
+<!-- ── FEATURES ───────────────────────────────────────────────── -->
 <section class="py-5" style="background:var(--es-dark-2);">
     <div class="container">
         <div class="text-center section-header">
@@ -149,91 +226,7 @@
     </div>
 </section>
 
-<!-- Featured Events -->
-{% if featured_events or upcoming_events %}
-<section class="py-5">
-    <div class="container">
-        {% if featured_events %}
-        <div class="section-header d-flex justify-content-between align-items-end">
-            <div>
-                <div class="section-badge">Featured</div>
-                <h2 class="section-title mt-2">Spotlight Events</h2>
-            </div>
-            <a href="{% url 'event_list' %}" class="btn btn-outline-primary">View All</a>
-        </div>
-        <div class="row gy-4 mb-5">
-            {% for event in featured_events %}
-            <div class="col-lg-4">
-                <div class="card event-card h-100">
-                    {% if event.banner %}
-                    <img src="{{ event.banner.url }}" class="card-img-top" alt="{{ event.title }}">
-                    {% else %}
-                    <div class="event-card-placeholder">
-                        <i class="bi bi-calendar-event"></i>
-                    </div>
-                    {% endif %}
-                    <div class="card-body p-4">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <span class="badge badge-category">{{ event.get_category_display }}</span>
-                            {% if event.is_virtual %}<span class="badge" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);">Virtual</span>{% endif %}
-                        </div>
-                        <h5 class="fw-bold mb-2">{{ event.title }}</h5>
-                        <p class="text-muted small mb-3">{{ event.description|truncatewords:15 }}</p>
-                        <div class="d-flex flex-column gap-1 mb-3">
-                            <small class="text-muted"><i class="bi bi-calendar3 me-2"></i>{{ event.start_date|date:"D, d M Y" }}</small>
-                            <small class="text-muted"><i class="bi bi-geo-alt me-2"></i>{{ event.venue }}, {{ event.city }}</small>
-                            <small class="text-muted"><i class="bi bi-people me-2"></i>{{ event.get_registered_count }} / {{ event.max_capacity }} registered</small>
-                        </div>
-                        <a href="{% url 'event_detail' event.slug %}" class="btn btn-primary w-100">View Event</a>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-
-        <div class="section-header d-flex justify-content-between align-items-end">
-            <div>
-                <div class="section-badge">Upcoming</div>
-                <h2 class="section-title mt-2">Don't Miss Out</h2>
-            </div>
-            <a href="{% url 'event_list' %}" class="btn btn-outline-primary">View All</a>
-        </div>
-        <div class="row gy-4">
-            {% for event in upcoming_events %}
-            <div class="col-lg-4 col-md-6">
-                <div class="card event-card h-100">
-                    {% if event.banner %}
-                    <img src="{{ event.banner.url }}" class="card-img-top" alt="{{ event.title }}">
-                    {% else %}
-                    <div class="event-card-placeholder">
-                        <i class="bi bi-calendar-event"></i>
-                    </div>
-                    {% endif %}
-                    <div class="card-body p-4">
-                        <div class="mb-2">
-                            <span class="badge badge-category">{{ event.get_category_display }}</span>
-                            {% if event.is_virtual %}<span class="badge ms-1" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);">Virtual</span>{% endif %}
-                        </div>
-                        <h6 class="fw-bold mb-2">{{ event.title }}</h6>
-                        <div class="d-flex flex-column gap-1 mb-3">
-                            <small class="text-muted"><i class="bi bi-calendar3 me-2"></i>{{ event.start_date|date:"D, d M Y" }}</small>
-                            <small class="text-muted"><i class="bi bi-geo-alt me-2"></i>{{ event.city }}</small>
-                        </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <small class="text-muted">{{ event.get_registered_count }} registered</small>
-                            <a href="{% url 'event_detail' event.slug %}" class="btn btn-sm btn-primary px-3">View</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-        </div>
-    </div>
-</section>
-{% endif %}
-
-<!-- CTA -->
+<!-- ── CTA ────────────────────────────────────────────────────── -->
 {% if not user.is_authenticated %}
 <section class="py-5" style="background:linear-gradient(135deg, rgba(108,61,225,0.15), rgba(245,158,11,0.1));">
     <div class="container text-center">
@@ -246,4 +239,11 @@
     </div>
 </section>
 {% endif %}
+
+<style>
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+</style>
 {% endblock %}

@@ -11,19 +11,31 @@ from .forms import (EventForm, TicketTierForm, SpeakerForm, SessionForm,
 
 
 def home(request):
-    featured_events = Event.objects.filter(status='published', is_featured=True).order_by('-start_date')[:3]
-    upcoming_events = Event.objects.filter(status='published', start_date__gte=timezone.now()).order_by('start_date')[:6]
-    past_events = Event.objects.filter(status='completed').order_by('-start_date')[:3]
-    categories = Event.CATEGORY_CHOICES
-    total_events = Event.objects.filter(status__in=['published', 'completed']).count()
+    now = timezone.now()
+    live_events = Event.objects.filter(
+        status='ongoing'
+    ) | Event.objects.filter(
+        status='published', start_date__lte=now, end_date__gte=now
+    )
+    live_events = live_events.distinct().order_by('end_date')[:4]
+
+    upcoming_events = Event.objects.filter(
+        status='published', start_date__gt=now
+    ).order_by('start_date')[:8]
+
+    past_events = Event.objects.filter(
+        status__in=['completed']
+    ).order_by('-end_date')[:4]
+
+    total_events = Event.objects.filter(status__in=['published', 'ongoing', 'completed']).count()
     total_registrations = Registration.objects.filter(status='confirmed').count()
     return render(request, 'events/home.html', {
-        'featured_events': featured_events,
+        'live_events': live_events,
         'upcoming_events': upcoming_events,
         'past_events': past_events,
-        'categories': categories,
         'total_events': total_events,
         'total_registrations': total_registrations,
+        'has_events': live_events.exists() or upcoming_events.exists() or past_events.exists(),
     })
 
 
