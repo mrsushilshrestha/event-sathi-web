@@ -1,11 +1,10 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
 {% block title %}Create Account{% endblock %}
 
 {% block content %}
 <div class="auth-wrapper">
     <div class="container">
-        <div class="auth-card">
+        <div class="auth-card" style="max-width:520px;">
             <div class="text-center mb-4">
                 <div class="auth-logo mb-2">
                     <i class="bi bi-calendar-event-fill text-warning me-2"></i>
@@ -38,11 +37,32 @@
                         {{ form.email }}
                         {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
                     </div>
+
+                    <!-- Visual Role Selection -->
                     <div class="col-12">
-                        <label class="form-label">I am a...</label>
-                        {{ form.role }}
-                        {% if form.role.errors %}<div class="text-danger small mt-1">{{ form.role.errors.0 }}</div>{% endif %}
+                        <label class="form-label fw-semibold">I want to join as...</label>
+                        <input type="hidden" name="role" id="roleInput" value="attendee">
+                        {% if form.role.errors %}<div class="text-danger small mb-2">{{ form.role.errors.0 }}</div>{% endif %}
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="role-card selected" id="roleAttendee" onclick="selectRole('attendee')"
+                                     style="cursor:pointer;padding:1.2rem;border-radius:12px;border:2px solid var(--es-primary);background:rgba(108,61,225,0.1);text-align:center;transition:all .2s;">
+                                    <i class="bi bi-person-circle fs-2 text-warning d-block mb-2"></i>
+                                    <div class="fw-bold text-white">Attendee</div>
+                                    <small class="text-muted">Browse & buy tickets</small>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="role-card" id="roleOrganizer" onclick="selectRole('organizer')"
+                                     style="cursor:pointer;padding:1.2rem;border-radius:12px;border:2px solid var(--es-border);background:rgba(255,255,255,0.03);text-align:center;transition:all .2s;">
+                                    <i class="bi bi-briefcase fs-2 text-warning d-block mb-2"></i>
+                                    <div class="fw-bold text-white">Organizer</div>
+                                    <small class="text-muted">Create & manage events</small>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+
                     <div class="col-12">
                         <label class="form-label">Password</label>
                         {{ form.password1 }}
@@ -75,5 +95,25 @@
 
 <style>
 .auth-wrapper input, .auth-wrapper select { width: 100%; display: block; }
+.role-card:hover { transform: translateY(-2px); }
 </style>
+
+<script>
+function selectRole(role) {
+    document.getElementById('roleInput').value = role;
+    const attendeeCard = document.getElementById('roleAttendee');
+    const organizerCard = document.getElementById('roleOrganizer');
+    if (role === 'attendee') {
+        attendeeCard.style.borderColor = 'var(--es-primary)';
+        attendeeCard.style.background = 'rgba(108,61,225,0.1)';
+        organizerCard.style.borderColor = 'var(--es-border)';
+        organizerCard.style.background = 'rgba(255,255,255,0.03)';
+    } else {
+        organizerCard.style.borderColor = 'var(--es-primary)';
+        organizerCard.style.background = 'rgba(108,61,225,0.1)';
+        attendeeCard.style.borderColor = 'var(--es-border)';
+        attendeeCard.style.background = 'rgba(255,255,255,0.03)';
+    }
+}
+</script>
 {% endblock %}

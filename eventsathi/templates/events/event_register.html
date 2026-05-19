@@ -39,7 +39,7 @@
                             <small class="text-muted">
                                 {% if tier.get_available > 0 %}{{ tier.get_available }} seats available{% else %}<span class="text-danger">Sold out</span>{% endif %}
                             </small>
-                            <div class="check-icon" id="check_{{ tier.id }}" style="display:{% if forloop.first %}flex{% else %}none{% endif%;width:24px;height:24px;background:var(--es-primary);border-radius:50%;align-items:center;justify-content:center;">
+                            <div class="check-icon" id="check_{{ tier.id }}" style="display:{% if forloop.first %}flex{% else %}none{% endif %};width:24px;height:24px;background:var(--es-primary);border-radius:50%;align-items:center;justify-content:center;">
                                 <i class="bi bi-check text-white" style="font-size:0.8rem;"></i>
                             </div>
                         </div>

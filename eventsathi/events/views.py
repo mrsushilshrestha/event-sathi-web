@@ -394,5 +394,12 @@ def my_tickets(request):
 
 @login_required
 def my_events(request):
-    events = Event.objects.filter(organizer=request.user).order_by('-created_at')
-    return render(request, 'events/my_events.html', {'events': events})
+    organized = Event.objects.filter(organizer=request.user).order_by('-created_at')
+    registered = Registration.objects.filter(user=request.user).select_related('event', 'ticket_tier').order_by('-registered_at')
+    profile = getattr(request.user, 'profile', None)
+    is_organizer = profile and profile.role in ['organizer'] or request.user.is_staff
+    return render(request, 'events/my_events.html', {
+        'organized': organized,
+        'registered': registered,
+        'is_organizer': is_organizer,
+    })

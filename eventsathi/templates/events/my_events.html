@@ -3,65 +3,164 @@
 
 {% block content %}
 <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h3 class="fw-bold mb-1">My Events</h3>
-            <p class="text-muted mb-0">Events you organize</p>
+            <p class="text-muted mb-0">
+                {% if is_organizer %}Events you organize and events you attend{% else %}Events you've registered for{% endif %}
+            </p>
         </div>
-        <a href="{% url 'event_create' %}" class="btn btn-primary"><i class="bi bi-plus-circle me-2"></i>Create Event</a>
+        {% if is_organizer %}
+        <a href="{% url 'event_create' %}" class="btn btn-warning px-4 fw-semibold">
+            <i class="bi bi-plus-circle me-2"></i>Post New Event
+        </a>
+        {% endif %}
     </div>
 
-    {% if events %}
-    <div class="row gy-4">
-        {% for event in events %}
-        <div class="col-lg-6">
-            <div class="card p-4 event-card">
-                <div class="d-flex justify-content-between align-items-start mb-2">
-                    <div>
-                        <span class="badge badge-status-{{ event.status }} mb-2">{{ event.get_status_display }}</span>
-                        <h5 class="fw-bold mb-1">{{ event.title }}</h5>
-                        <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>{{ event.start_date|date:"d M Y" }}</small>
-                        <span class="text-muted mx-2">·</span>
-                        <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ event.city }}</small>
-                    </div>
-                </div>
-                <div class="d-flex gap-3 mb-3">
-                    <div class="metric-card flex-fill" style="padding:0.8rem;">
-                        <div class="metric-value fs-5">{{ event.get_registered_count }}</div>
-                        <div class="metric-label" style="font-size:0.75rem;">Registered</div>
-                    </div>
-                    <div class="metric-card flex-fill" style="padding:0.8rem;">
-                        <div class="metric-value fs-5">{{ event.get_available_seats }}</div>
-                        <div class="metric-label" style="font-size:0.75rem;">Available</div>
-                    </div>
-                    <div class="metric-card flex-fill" style="padding:0.8rem;">
-                        <div class="metric-value fs-5">{{ event.sessions.count }}</div>
-                        <div class="metric-label" style="font-size:0.75rem;">Sessions</div>
-                    </div>
-                </div>
-                <div class="d-flex gap-2 flex-wrap">
-                    <a href="{% url 'event_detail' event.slug %}" class="btn btn-sm btn-outline-primary">View</a>
-                    <a href="{% url 'event_manage' event.slug %}" class="btn btn-sm btn-primary">
-                        <i class="bi bi-gear me-1"></i>Manage
-                    </a>
-                    <a href="{% url 'event_analytics' event.slug %}" class="btn btn-sm btn-outline-secondary">
-                        <i class="bi bi-bar-chart me-1"></i>Analytics
-                    </a>
-                    <a href="{% url 'check_in' event.slug %}" class="btn btn-sm btn-outline-success">
-                        <i class="bi bi-qr-code-scan me-1"></i>Check-In
-                    </a>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="text-center py-5">
-        <i class="bi bi-calendar-plus fs-1 text-muted mb-4 d-block"></i>
-        <h5 class="fw-bold mb-2">No events yet</h5>
-        <p class="text-muted mb-4">Create your first event and start managing it here.</p>
-        <a href="{% url 'event_create' %}" class="btn btn-primary btn-lg px-5">Create Event</a>
-    </div>
+    <!-- Tabs — organizers see both panels, attendees only see Registered -->
+    {% if is_organizer %}
+    <ul class="nav nav-pills mb-4 gap-2" id="eventsTab">
+        <li class="nav-item">
+            <button class="nav-link active px-4" id="organized-tab" data-bs-toggle="pill" data-bs-target="#organized" type="button">
+                <i class="bi bi-megaphone me-2"></i>Events I Organize
+                <span class="badge ms-2" style="background:rgba(255,255,255,0.15);">{{ organized.count }}</span>
+            </button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link px-4" id="registered-tab" data-bs-toggle="pill" data-bs-target="#registered" type="button">
+                <i class="bi bi-ticket-perforated me-2"></i>Events I Attend
+                <span class="badge ms-2" style="background:rgba(255,255,255,0.15);">{{ registered.count }}</span>
+            </button>
+        </li>
+    </ul>
     {% endif %}
+
+    <div class="tab-content">
+
+        <!-- Organized Events (organizers only) -->
+        {% if is_organizer %}
+        <div class="tab-pane fade show active" id="organized">
+            {% if organized %}
+            <div class="row gy-4">
+                {% for event in organized %}
+                <div class="col-lg-6">
+                    <div class="card p-4 event-card h-100">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div>
+                                <span class="badge badge-status-{{ event.status }} mb-2">{{ event.get_status_display }}</span>
+                                <h5 class="fw-bold mb-1">{{ event.title }}</h5>
+                                <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>{{ event.start_date|date:"d M Y" }}</small>
+                                <span class="text-muted mx-2">·</span>
+                                <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ event.city }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 mb-3">
+                            <div class="metric-card flex-fill" style="padding:0.8rem;">
+                                <div class="metric-value fs-5">{{ event.get_registered_count }}</div>
+                                <div class="metric-label" style="font-size:0.75rem;">Registered</div>
+                            </div>
+                            <div class="metric-card flex-fill" style="padding:0.8rem;">
+                                <div class="metric-value fs-5">{{ event.get_available_seats }}</div>
+                                <div class="metric-label" style="font-size:0.75rem;">Available</div>
+                            </div>
+                            <div class="metric-card flex-fill" style="padding:0.8rem;">
+                                <div class="metric-value fs-5">{{ event.sessions.count }}</div>
+                                <div class="metric-label" style="font-size:0.75rem;">Sessions</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap mt-auto">
+                            <a href="{% url 'event_detail' event.slug %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>View
+                            </a>
+                            <a href="{% url 'event_manage' event.slug %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-gear me-1"></i>Manage
+                            </a>
+                            <a href="{% url 'event_analytics' event.slug %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-bar-chart me-1"></i>Analytics
+                            </a>
+                            <a href="{% url 'check_in' event.slug %}" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-qr-code-scan me-1"></i>Check-In
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-calendar-plus fs-1 text-muted mb-4 d-block"></i>
+                <h5 class="fw-bold mb-2">No events posted yet</h5>
+                <p class="text-muted mb-4">Create your first event and start managing registrations, sessions, and more.</p>
+                <a href="{% url 'event_create' %}" class="btn btn-warning btn-lg px-5 fw-semibold">
+                    <i class="bi bi-plus-circle me-2"></i>Post Your First Event
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Registered / Attending Events (all users) -->
+        <div class="tab-pane fade {% if not is_organizer %}show active{% endif %}" id="registered">
+            {% if registered %}
+            <div class="row gy-4">
+                {% for reg in registered %}
+                <div class="col-lg-6">
+                    <div class="card p-4 h-100" style="border:1px solid var(--es-border);">
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="flex-grow-1">
+                                <div class="d-flex gap-2 mb-2 flex-wrap">
+                                    <span class="badge badge-status-{{ reg.event.status }}">{{ reg.event.get_status_display }}</span>
+                                    <span class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);">
+                                        <i class="bi bi-check-circle me-1"></i>{{ reg.get_status_display }}
+                                    </span>
+                                </div>
+                                <h5 class="fw-bold mb-1">{{ reg.event.title }}</h5>
+                                <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>{{ reg.event.start_date|date:"d M Y" }}</small>
+                                <span class="text-muted mx-2">·</span>
+                                <small class="text-muted"><i class="bi bi-geo-alt me-1"></i>{{ reg.event.city }}</small>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-3 mb-3">
+                            <div class="metric-card flex-fill" style="padding:0.8rem;">
+                                <div class="metric-value" style="font-size:0.9rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ reg.ticket_tier.name }}</div>
+                                <div class="metric-label" style="font-size:0.75rem;">Ticket Tier</div>
+                            </div>
+                            <div class="metric-card flex-fill" style="padding:0.8rem;">
+                                <div class="metric-value fs-6">{% if reg.amount_paid == 0 %}Free{% else %}₹{{ reg.amount_paid|floatformat:0 }}{% endif %}</div>
+                                <div class="metric-label" style="font-size:0.75rem;">Paid</div>
+                            </div>
+                            <div class="metric-card flex-fill" style="padding:0.8rem;">
+                                <div class="metric-value" style="font-size:0.85rem;">{{ reg.registered_at|date:"d M" }}</div>
+                                <div class="metric-label" style="font-size:0.75rem;">Registered</div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2 flex-wrap mt-auto">
+                            <a href="{% url 'event_detail' reg.event.slug %}" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye me-1"></i>View Event
+                            </a>
+                            <a href="{% url 'view_ticket' reg.ticket_id %}" class="btn btn-sm btn-primary">
+                                <i class="bi bi-qr-code me-2"></i>My Ticket
+                            </a>
+                            <a href="{% url 'event_agenda' reg.event.slug %}" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-list-check me-1"></i>Agenda
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-5">
+                <i class="bi bi-ticket-perforated fs-1 text-muted mb-4 d-block"></i>
+                <h5 class="fw-bold mb-2">No event registrations yet</h5>
+                <p class="text-muted mb-4">Browse upcoming events and register to get your ticket.</p>
+                <a href="{% url 'event_list' %}" class="btn btn-primary btn-lg px-5">
+                    <i class="bi bi-search me-2"></i>Browse Events
+                </a>
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
 </div>
 {% endblock %}
