@@ -344,7 +344,23 @@ body {
     box-shadow: 0 0 0 3px rgba(249,115,22,0.15) !important;
     color: var(--es-input-color) !important;
 }
-.form-control::placeholder { color: var(--es-text-muted); }
+.form-control::placeholder { color: var(--es-text-muted); opacity: 1; }
+
+/* Dark mode — force placeholder to be clearly visible */
+[data-theme="dark"] .form-control::placeholder,
+[data-theme="dark"] textarea::placeholder,
+[data-theme="dark"] input::placeholder {
+    color: #808080 !important;
+    opacity: 1 !important;
+}
+
+/* Light mode placeholder */
+[data-theme="light"] .form-control::placeholder,
+[data-theme="light"] textarea::placeholder,
+[data-theme="light"] input::placeholder {
+    color: #b0896a !important;
+    opacity: 1 !important;
+}
 .form-label { font-weight: 500; color: var(--es-text); margin-bottom: 6px; }
 .form-text  { color: var(--es-text-muted) !important; font-size: 0.8rem; }
 .form-select option { background: var(--es-dd-bg); color: var(--es-text); }
