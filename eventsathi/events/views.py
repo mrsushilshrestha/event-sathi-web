@@ -135,11 +135,12 @@ def event_create(request):
     if request.method == 'POST' and form.is_valid():
         event = form.save(commit=False)
         event.organizer = request.user
+        event.status = 'published'
         event.save()
         TicketTier.objects.create(event=event, name='General Admission', price=0, capacity=event.max_capacity)
-        messages.success(request, 'Event created! Now add ticket tiers, speakers, and sessions.')
+        messages.success(request, 'Event published! Now add ticket tiers, speakers, and sessions.')
         return redirect('event_manage', slug=event.slug)
-    return render(request, 'events/event_form.html', {'form': form, 'action': 'Create Event'})
+    return render(request, 'events/event_form.html', {'form': form, 'action': 'Post Event'})
 
 
 @login_required

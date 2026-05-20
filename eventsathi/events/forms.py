@@ -8,20 +8,33 @@ class EventForm(forms.ModelForm):
         model = Event
         fields = [
             'title', 'description', 'category', 'banner',
-            'start_date', 'end_date', 'venue', 'city',
-            'is_virtual', 'virtual_link', 'max_capacity', 'status', 'tags'
+            'start_date', 'end_date',
+            'registration_start', 'registration_end',
+            'venue', 'city',
+            'is_virtual', 'virtual_link', 'max_capacity', 'tags', 'is_featured',
         ]
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 5}),
+            'description': forms.Textarea(attrs={'rows': 5, 'placeholder': 'Describe your event — agenda highlights, what attendees will learn, who should attend…'}),
             'start_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
             'end_date': forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+            'registration_start': forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
+            'registration_end': forms.DateTimeInput(attrs={'type': 'datetime-local'}, format='%Y-%m-%dT%H:%M'),
             'tags': forms.TextInput(attrs={'placeholder': 'e.g. AI, Tech, Innovation'}),
+            'virtual_link': forms.URLInput(attrs={'placeholder': 'https://meet.google.com/...'}),
+            'title': forms.TextInput(attrs={'placeholder': 'Give your event a catchy title'}),
+            'venue': forms.TextInput(attrs={'placeholder': 'Auditorium, Hall, Building name…'}),
+            'city': forms.TextInput(attrs={'placeholder': 'Mumbai'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['start_date'].input_formats = ['%Y-%m-%dT%H:%M']
-        self.fields['end_date'].input_formats = ['%Y-%m-%dT%H:%M']
+        for f in ['start_date', 'end_date', 'registration_start', 'registration_end']:
+            self.fields[f].input_formats = ['%Y-%m-%dT%H:%M']
+        self.fields['registration_start'].required = False
+        self.fields['registration_end'].required = False
+        self.fields['is_featured'].required = False
+        self.fields['virtual_link'].required = False
+        self.fields['banner'].required = False
 
     def save(self, commit=True):
         event = super().save(commit=False)
