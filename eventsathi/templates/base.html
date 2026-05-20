@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,6 +10,8 @@
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
+    <!-- Apply saved theme before first paint to avoid flash -->
+    <script>(function(){var t=localStorage.getItem('es-theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
 
@@ -36,6 +38,12 @@
                 {% endif %}
             </ul>
             <ul class="navbar-nav ms-auto align-items-center">
+                <!-- Theme toggle -->
+                <li class="nav-item me-1">
+                    <button class="theme-toggle border-0" id="themeToggle" title="Toggle light/dark mode">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
+                </li>
                 {% if user.is_authenticated %}
                 {% with profile=user.profile %}
                 {% if profile.role == 'organizer' or user.is_staff %}
