@@ -7,10 +7,10 @@
         <div class="auth-card">
             <div class="text-center mb-4">
                 <div class="auth-logo mb-2">
-                    <i class="bi bi-calendar-event-fill text-warning me-2"></i>
-                    <span class="text-white">EventSathi</span>
+                    <i class="bi bi-calendar-event-fill me-2" style="color:var(--es-primary)"></i>
+                    <span>EventSathi</span>
                 </div>
-                <h4 class="text-white fw-bold">Welcome back</h4>
+                <h4 class="fw-bold">Welcome back</h4>
                 <p class="text-muted small">Sign in to your EventSathi account</p>
             </div>
 
@@ -23,7 +23,12 @@
                 </div>
                 <div class="mb-3">
                     <label class="form-label">Password</label>
-                    {{ form.password }}
+                    <div class="input-group">
+                        {{ form.password }}
+                        <button type="button" class="btn btn-outline-secondary show-pass-btn" tabindex="-1" data-target="id_password">
+                            <i class="bi bi-eye"></i>
+                        </button>
+                    </div>
                     {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
                 </div>
                 {% if form.non_field_errors %}
@@ -35,9 +40,8 @@
             </form>
 
             <div class="divider-text my-4">or</div>
-
             <div class="text-center">
-                <p class="text-muted small">Don't have an account? <a href="{% url 'register' %}" class="text-warning fw-semibold text-decoration-none">Create one free</a></p>
+                <p class="text-muted small">Don't have an account? <a href="{% url 'register' %}" class="fw-semibold text-decoration-none" style="color:var(--es-primary)">Create one free</a></p>
             </div>
         </div>
     </div>
@@ -45,5 +49,24 @@
 
 <style>
 .auth-wrapper input { width: 100%; display: block; }
+.auth-wrapper .input-group input { border-right: none !important; border-radius: var(--es-radius-sm) 0 0 var(--es-radius-sm) !important; }
+.auth-wrapper .input-group .show-pass-btn { border-left: none; background: var(--es-input-bg); border-color: var(--es-input-border); color: var(--es-text-muted); }
+.auth-wrapper .input-group .show-pass-btn:hover { color: var(--es-primary); background: var(--es-input-bg); }
 </style>
+
+<script>
+document.querySelectorAll('.show-pass-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const input = document.getElementById(this.getAttribute('data-target'));
+        const icon = this.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    });
+});
+</script>
 {% endblock %}

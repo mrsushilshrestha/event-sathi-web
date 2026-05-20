@@ -1,5 +1,6 @@
 from django import forms
 from django.utils.text import slugify
+from django.utils import timezone
 from .models import Event, TicketTier, Speaker, EventSession, Sponsor, Announcement, QAQuestion, Poll, PollChoice
 
 
@@ -28,13 +29,37 @@ class EventForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Set minimum selectable date to now (prevents picking past dates in the UI)
+        now_min = timezone.now().strftime('%Y-%m-%dT%H:%M')
         for f in ['start_date', 'end_date', 'registration_start', 'registration_end']:
             self.fields[f].input_formats = ['%Y-%m-%dT%H:%M']
+            self.fields[f].widget.attrs['min'] = now_min
         self.fields['registration_start'].required = False
         self.fields['registration_end'].required = False
         self.fields['is_featured'].required = False
         self.fields['virtual_link'].required = False
         self.fields['banner'].required = False
+
+    def clean(self):
+        cleaned_data = super().clean()
+        now = timezone.now()
+        start_date = cleaned_data.get('start_date')
+        end_date = cleaned_data.get('end_date')
+        reg_start = cleaned_data.get('registration_start')
+        reg_end = cleaned_data.get('registration_end')
+
+        if start_date and start_date < now:
+            self.add_error('start_date', 'Start date cannot be in the past. Please choose a future date.')
+        if end_date:
+            if end_date < now:
+                self.add_error('end_date', 'End date cannot be in the past.')
+            elif start_date and end_date <= start_date:
+                self.add_error('end_date', 'End date must be after the start date.')
+        if reg_start and reg_start < now:
+            self.add_error('registration_start', 'Registration start cannot be in the past.')
+        if reg_end and reg_start and reg_end <= reg_start:
+            self.add_error('registration_end', 'Registration end must be after registration start.')
+        return cleaned_data
 
     def save(self, commit=True):
         event = super().save(commit=False)
