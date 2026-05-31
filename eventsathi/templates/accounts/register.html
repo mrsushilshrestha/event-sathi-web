@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Create Account{% endblock %}
 
 {% block content %}
@@ -6,9 +7,9 @@
     <div class="container">
         <div class="auth-card" style="max-width:520px;">
             <div class="text-center mb-4">
-                <div class="auth-logo mb-2">
-                    <i class="bi bi-calendar-event-fill me-2" style="color:var(--es-primary)"></i>
-                    <span>EventSathi</span>
+                <div class="auth-logo mb-2 d-flex align-items-center justify-content-center">
+                    <img src="{% static 'images/logo.png' %}" alt="EventSathi" style="height: 48px; width: auto;" class="me-2">
+                    <span>Event-Sathi</span>
                 </div>
                 <h4 class="fw-bold">Create your account</h4>
                 <p class="text-muted small">Join thousands of event enthusiasts</p>
@@ -28,14 +29,34 @@
                         {% if form.last_name.errors %}<div class="text-danger small mt-1">{{ form.last_name.errors.0 }}</div>{% endif %}
                     </div>
                     <div class="col-12">
-                        <label class="form-label">Username</label>
-                        {{ form.username }}
-                        {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-12">
                         <label class="form-label">Email Address</label>
                         {{ form.email }}
                         {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Contact Number</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Password</label>
+                        <div class="input-group">
+                            {{ form.password1 }}
+                            <button type="button" class="btn btn-outline-secondary show-pass-btn" tabindex="-1" data-target="id_password1">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Confirm Password</label>
+                        <div class="input-group">
+                            {{ form.password2 }}
+                            <button type="button" class="btn btn-outline-secondary show-pass-btn" tabindex="-1" data-target="id_password2">
+                                <i class="bi bi-eye"></i>
+                            </button>
+                        </div>
+                        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
                     </div>
 
                     <!-- Role Selection -->
@@ -61,28 +82,6 @@
                                 </div>
                             </div>
                         </div>
-                    </div>
-
-                    <!-- Password with show/hide -->
-                    <div class="col-12">
-                        <label class="form-label">Password</label>
-                        <div class="input-group">
-                            {{ form.password1 }}
-                            <button type="button" class="btn btn-outline-secondary show-pass-btn" tabindex="-1" data-target="id_password1">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                        {% if form.password1.errors %}<div class="text-danger small mt-1">{{ form.password1.errors.0 }}</div>{% endif %}
-                    </div>
-                    <div class="col-12">
-                        <label class="form-label">Confirm Password</label>
-                        <div class="input-group">
-                            {{ form.password2 }}
-                            <button type="button" class="btn btn-outline-secondary show-pass-btn" tabindex="-1" data-target="id_password2">
-                                <i class="bi bi-eye"></i>
-                            </button>
-                        </div>
-                        {% if form.password2.errors %}<div class="text-danger small mt-1">{{ form.password2.errors.0 }}</div>{% endif %}
                     </div>
                 </div>
 

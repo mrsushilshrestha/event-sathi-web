@@ -8,6 +8,13 @@ out-tsc
 .expo
 .expo-shared
 
+# Python virtual environment
+venv/
+env/
+.venv/
+ENV/
+venv.bak/
+
 # dependencies
 node_modules
 

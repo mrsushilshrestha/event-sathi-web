@@ -1,6 +1,10 @@
 {% extends 'base.html' %}
 {% block title %}Analytics - {{ event.title }}{% endblock %}
 
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
 {% block content %}
 <div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
     <div class="container">
@@ -22,6 +26,8 @@
                     <hr class="border-secondary">
                     <a class="nav-link" href="{% url 'check_in' event.slug %}"><i class="bi bi-qr-code-scan me-2"></i>Check-In Portal</a>
                     <a class="nav-link active" href="{% url 'event_analytics' event.slug %}"><i class="bi bi-bar-chart-line me-2"></i>Analytics</a>
+                    <hr class="border-secondary">
+                    <a class="nav-link text-danger" href="{% url 'event_delete' event.slug %}"><i class="bi bi-trash3 me-2"></i>Delete Event</a>
                 </nav>
             </div>
         </div>
@@ -127,20 +133,69 @@
             {% endif %}
 
             <!-- Daily Registrations -->
-            {% if daily_regs %}
-            <div class="card p-4">
-                <h5 class="fw-bold mb-3">Daily Registrations</h5>
-                <div class="d-flex align-items-end gap-2" style="height:120px;">
-                    {% for day in daily_regs %}
-                    <div class="d-flex flex-column align-items-center flex-grow-1">
-                        <small class="text-muted mb-1" style="font-size:0.65rem;">{{ day.count }}</small>
-                        <div style="width:100%;border-radius:4px 4px 0 0;background:linear-gradient(to top,var(--es-primary),#a78bfa);height:{% widthratio day.count 10 100 %}px;min-height:4px;"></div>
-                        <small class="text-muted mt-1" style="font-size:0.6rem;">{{ day.date|date:"d M" }}</small>
+            <div class="row g-4">
+                <div class="col-lg-8">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-4">Registration Timeline</h5>
+                        <canvas id="regTimelineChart" style="max-height: 250px;"></canvas>
                     </div>
-                    {% endfor %}
+                </div>
+                <div class="col-lg-4">
+                    <div class="card p-4 h-100">
+                        <h5 class="fw-bold mb-4">Platform Distribution</h5>
+                        <canvas id="platformChart" style="max-height: 250px;"></canvas>
+                    </div>
                 </div>
             </div>
-            {% endif %}
+
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    // Registration Timeline
+                    const ctxReg = document.getElementById('regTimelineChart').getContext('2d');
+                    new Chart(ctxReg, {
+                        type: 'line',
+                        data: {
+                            labels: [{% for day in daily_regs %}"{{ day.date|date:'d M' }}",{% endfor %}],
+                            datasets: [{
+                                label: 'Registrations',
+                                data: [{% for day in daily_regs %}{{ day.count }},{% endfor %}],
+                                borderColor: '#6c3de1',
+                                backgroundColor: 'rgba(108, 61, 225, 0.1)',
+                                tension: 0.4,
+                                fill: true,
+                                pointBackgroundColor: '#f59e0b'
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { display: false } },
+                            scales: {
+                                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' } },
+                                x: { grid: { display: false } }
+                            }
+                        }
+                    });
+
+                    // Platform Distribution
+                    const ctxPlat = document.getElementById('platformChart').getContext('2d');
+                    new Chart(ctxPlat, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [{% for item in platform_data %}"{{ item.platform|title }}",{% endfor %}],
+                            datasets: [{
+                                data: [{% for item in platform_data %}{{ item.count }},{% endfor %}],
+                                backgroundColor: ['#6c3de1', '#10b981', '#3b82f6', '#f59e0b'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: { legend: { position: 'bottom', labels: { color: '#94a3b8', boxWidth: 12 } } },
+                            cutout: '70%'
+                        }
+                    });
+                });
+            </script>
         </div>
     </div>
 </div>

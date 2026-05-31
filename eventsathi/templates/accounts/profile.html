@@ -1,88 +1,298 @@
 {% extends 'base.html' %}
-{% block title %}My Profile{% endblock %}
+{% block title %}My Profile - EventSathi{% endblock %}
 
 {% block content %}
 <div class="container py-5">
-    <div class="row gy-4">
-        <!-- Profile Card -->
-        <div class="col-lg-4">
-            <div class="card p-4 text-center mb-4">
-                <div class="speaker-avatar mx-auto mb-3" style="width:100px;height:100px;font-size:2.5rem;">
+    <div class="row g-4.5">
+        
+        <!-- Left Column: Premium Profile Summary Card -->
+        <div class="col-lg-4 animate-fade-in">
+            <div class="card p-4 text-center border mb-4" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important; box-shadow: var(--es-shadow-card);">
+                
+                <!-- Circular Avatar Display -->
+                <div class="mx-auto mb-3.5 d-flex align-items-center justify-content-center position-relative" style="width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, var(--es-primary), var(--es-accent-pink)); padding: 3.5px;">
                     {% if profile.photo %}
-                    <img src="{{ profile.photo.url }}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;" alt="">
+                    <img src="{{ profile.photo.url }}" style="width: 103px; height: 103px; border-radius: 50%; object-fit: cover; background: var(--es-card-bg);" alt="{{ user.username }}">
                     {% else %}
-                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    <div class="fw-bold text-white d-flex align-items-center justify-content-center" style="width: 103px; height: 103px; border-radius: 50%; background: var(--es-dark-3); font-size: 2.2rem;">
+                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    </div>
                     {% endif %}
                 </div>
-                <h4 class="fw-bold mb-1">{{ user.get_full_name|default:user.username }}</h4>
-                <p class="text-muted small mb-2">@{{ user.username }}</p>
-                <span class="badge badge-category mb-3">{{ profile.get_role_display }}</span>
+
+                <!-- Profile Meta -->
+                <h4 class="fw-bold mb-1 text-white">{{ user.get_full_name|default:user.username }}</h4>
+                {% if "@" not in user.username %}
+                <p class="text-muted small mb-3">@{{ user.username }}</p>
+                {% endif %}
+                
+                <span class="badge px-3 py-2 mb-3.5" style="background: rgba(139,92,246,0.12); color: #c084fc; border: 1px solid rgba(139,92,246,0.25); border-radius: 20px; font-size: 0.75rem;">
+                    <i class="bi bi-shield-shaded me-1.5"></i>{{ profile.get_role_display }}
+                </span>
+
                 {% if profile.designation or profile.organization %}
-                <p class="text-muted small mb-2">
+                <p class="text-muted small mb-3">
                     {% if profile.designation %}{{ profile.designation }}{% endif %}
                     {% if profile.organization %} at <strong class="text-white">{{ profile.organization }}</strong>{% endif %}
                 </p>
                 {% endif %}
+
                 {% if profile.bio %}
-                <p class="text-muted small">{{ profile.bio }}</p>
-                {% endif %}
-                <div class="d-flex justify-content-center gap-3 mt-3">
-                    {% if profile.linkedin %}<a href="{{ profile.linkedin }}" class="text-muted fs-5" target="_blank"><i class="bi bi-linkedin"></i></a>{% endif %}
-                    {% if profile.twitter %}<a href="{{ profile.twitter }}" class="text-muted fs-5" target="_blank"><i class="bi bi-twitter-x"></i></a>{% endif %}
-                    {% if profile.website %}<a href="{{ profile.website }}" class="text-muted fs-5" target="_blank"><i class="bi bi-globe"></i></a>{% endif %}
+                <div class="p-3.5 rounded-3 mb-4 text-start" style="background: rgba(255,255,255,0.02); border: 1px solid var(--es-border);">
+                    <small class="text-muted d-block mb-1.5"><i class="bi bi-quote"></i> Biography</small>
+                    <p class="text-secondary small mb-0" style="line-height: 1.5.5; white-space: pre-wrap;">{{ profile.bio }}</p>
                 </div>
-                <a href="{% url 'profile_edit' %}" class="btn btn-primary w-100 mt-3">
-                    <i class="bi bi-pencil me-2"></i>Edit Profile
+                {% endif %}
+
+                <!-- Social Profiles Grid -->
+                <div class="d-flex justify-content-center gap-3 mb-4">
+                    {% if profile.linkedin %}
+                    <a href="{{ profile.linkedin }}" target="_blank" class="btn btn-social-action d-flex align-items-center justify-content-center rounded-circle border" style="width:38px; height:38px; background:rgba(255,255,255,0.02); border-color:var(--es-border)!important;" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    {% endif %}
+                    {% if profile.twitter %}
+                    <a href="{{ profile.twitter }}" target="_blank" class="btn btn-social-action d-flex align-items-center justify-content-center rounded-circle border" style="width:38px; height:38px; background:rgba(255,255,255,0.02); border-color:var(--es-border)!important;" title="Twitter/X"><i class="bi bi-twitter-x"></i></a>
+                    {% endif %}
+                    {% if profile.website %}
+                    <a href="{{ profile.website }}" target="_blank" class="btn btn-social-action d-flex align-items-center justify-content-center rounded-circle border" style="width:38px; height:38px; background:rgba(255,255,255,0.02); border-color:var(--es-border)!important;" title="Website"><i class="bi bi-globe"></i></a>
+                    {% endif %}
+                </div>
+
+                <a href="{% url 'profile_edit' %}" class="btn btn-outline-warning w-100 fw-semibold" style="border-radius: 20px;">
+                    <i class="bi bi-pencil-square me-1.5"></i>Edit Profile Details
                 </a>
             </div>
-            <!-- Interests -->
+
+            <!-- User Interests -->
             {% if profile.get_interests_list %}
-            <div class="card p-4">
-                <h6 class="fw-bold mb-3">Interests</h6>
+            <div class="card p-4 border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <h6 class="fw-bold mb-3 text-white"><i class="bi bi-tag-fill me-2 text-warning"></i>Tags of Interest</h6>
                 <div class="d-flex flex-wrap gap-2">
                     {% for interest in profile.get_interests_list %}
-                    <span class="badge badge-category">{{ interest }}</span>
+                    <span class="badge px-2.5 py-1.5" style="background: rgba(255,255,255,0.04); border: 1px solid var(--es-border); border-radius: 6px; font-size: 0.72rem; color: #cbd5e1;"># {{ interest }}</span>
                     {% endfor %}
                 </div>
             </div>
             {% endif %}
         </div>
 
-        <!-- Right Column -->
+        <!-- Right Column: Interactive Tabs Panel -->
         <div class="col-lg-8">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="fw-bold mb-0">My Registrations</h5>
-                <a href="{% url 'my_tickets' %}" class="btn btn-outline-primary btn-sm">View All Tickets</a>
+            
+            <!-- Unified Tabs Navigation Controls Bar -->
+            <div class="card p-2 border mb-4 shadow" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <ul class="nav nav-pills nav-fill" id="profileTab" role="tablist" style="gap: 4px;">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="bookings-tab" data-bs-toggle="tab" data-bs-target="#bookings" type="button" role="tab" aria-controls="bookings" aria-selected="true">
+                            <i class="bi bi-ticket-perforated"></i>Bookings
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="saved-tab" data-bs-toggle="tab" data-bs-target="#saved" type="button" role="tab" aria-controls="saved" aria-selected="false">
+                            <i class="bi bi-bookmark"></i>Saved
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="interested-tab" data-bs-toggle="tab" data-bs-target="#interested" type="button" role="tab" aria-controls="interested" aria-selected="false">
+                            <i class="bi bi-star"></i>Interested
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab" aria-controls="past" aria-selected="false">
+                            <i class="bi bi-archive"></i>Past
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link py-2.5 fw-semibold d-flex align-items-center justify-content-center gap-1.5" id="posts-tab" data-bs-toggle="tab" data-bs-target="#posts" type="button" role="tab" aria-controls="posts" aria-selected="false">
+                            <i class="bi bi-postcard"></i>My Posts
+                        </button>
+                    </li>
+                </ul>
             </div>
-            {% if registrations %}
-            {% for reg in registrations %}
-            <div class="card mb-3 p-4">
-                <div class="d-flex justify-content-between align-items-start flex-wrap gap-3">
-                    <div>
-                        <h6 class="fw-bold mb-1">{{ reg.event.title }}</h6>
-                        <small class="text-muted"><i class="bi bi-calendar3 me-1"></i>{{ reg.event.start_date|date:"D, d M Y" }}</small>
-                        <br>
-                        <small class="text-muted"><i class="bi bi-ticket me-1"></i>{{ reg.ticket_tier.name }}</small>
-                        <span class="ms-2 badge badge-status-{{ reg.status }}">{{ reg.get_status_display }}</span>
+
+            <!-- Tabs Content Panels -->
+            <div class="tab-content" id="profileTabContent">
+                
+                <!-- 1. Bookings Tab -->
+                <div class="tab-pane fade show active" id="bookings" role="tabpanel" aria-labelledby="bookings-tab">
+                    {% if registrations %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for reg in registrations %}
+                            <div class="card p-4 border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                    <div class="d-flex gap-3">
+                                        {% if reg.event.banner %}
+                                        <img src="{{ reg.event.banner.url }}" class="rounded-3" style="width: 80px; height: 80px; object-fit: cover;" alt="">
+                                        {% else %}
+                                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-secondary" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-calendar-event fs-3 text-white-50"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="fw-bold mb-1.5"><a href="{% url 'event_detail' reg.event.slug %}" class="text-white text-decoration-none hover-primary">{{ reg.event.title }}</a></h6>
+                                            <small class="text-muted d-block mb-1"><i class="bi bi-calendar3 me-1.5 text-warning"></i>{{ reg.event.start_date|date:"D, d M Y, g:i A" }}</small>
+                                            <small class="text-muted d-flex align-items-center gap-1.5">
+                                                <i class="bi bi-ticket text-primary"></i>{{ reg.ticket_tier.name }}
+                                                <span class="badge badge-status-{{ reg.status }}">{{ reg.get_status_display }}</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-semibold text-white small mb-2">ID: {{ reg.ticket_id }}</div>
+                                        <a href="{% url 'view_ticket' reg.ticket_id %}" class="btn btn-sm btn-primary px-3.5" style="border-radius: 20px;">
+                                            <i class="bi bi-qr-code me-1.5"></i>View Ticket
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-ticket-perforated fs-1 text-muted mb-3.5"></i>
+                        <h6 class="fw-bold text-white">No active registrations</h6>
+                        <p class="text-muted small">You don't have any upcoming event bookings scheduled yet.</p>
+                        <a href="{% url 'event_list' %}" class="btn btn-warning btn-sm px-4 text-dark fw-bold mt-2.5 mx-auto" style="width:fit-content; border-radius: 20px;">Browse Live Events</a>
                     </div>
-                    <div class="text-end">
-                        <div class="fw-bold mb-2">{{ reg.ticket_id }}</div>
-                        <a href="{% url 'view_ticket' reg.ticket_id %}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-qr-code me-1"></i>View Ticket
-                        </a>
-                    </div>
+                    {% endif %}
                 </div>
+
+                <!-- 2. Saved Events Tab -->
+                <div class="tab-pane fade" id="saved" role="tabpanel" aria-labelledby="saved-tab">
+                    {% if saved_events %}
+                        <div class="row g-4">
+                            {% for saved in saved_events %}
+                            <div class="col-md-6">
+                                {% include 'events/_event_card.html' with event=saved.event %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-bookmark-heart fs-1 text-muted mb-3.5"></i>
+                        <h6 class="fw-bold text-white">No saved events</h6>
+                        <p class="text-muted small">Bookmarks you add in the event card/feed will appear here.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 3. Interested Events Tab -->
+                <div class="tab-pane fade" id="interested" role="tabpanel" aria-labelledby="interested-tab">
+                    {% if interested_events %}
+                        <div class="row g-4">
+                            {% for interest in interested_events %}
+                            <div class="col-md-6">
+                                {% include 'events/_event_card.html' with event=interest.event %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-star fs-1 text-muted mb-3.5"></i>
+                        <h6 class="fw-bold text-white">No interested events</h6>
+                        <p class="text-muted small">Events you mark as interested from the card dropdown will appear here.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 4. Past Bookings Tab -->
+                <div class="tab-pane fade" id="past" role="tabpanel" aria-labelledby="past-tab">
+                    {% if past_registrations %}
+                        <div class="d-flex flex-column gap-3">
+                            {% for reg in past_registrations %}
+                            <div class="card p-4 border opacity-75" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                                    <div class="d-flex gap-3">
+                                        {% if reg.event.banner %}
+                                        <img src="{{ reg.event.banner.url }}" class="rounded-3 filter-grayscale" style="width: 80px; height: 80px; object-fit: cover;" alt="">
+                                        {% else %}
+                                        <div class="d-flex align-items-center justify-content-center rounded-3 bg-secondary" style="width: 80px; height: 80px;">
+                                            <i class="bi bi-archive fs-3 text-white-50"></i>
+                                        </div>
+                                        {% endif %}
+                                        <div>
+                                            <h6 class="fw-bold mb-1.5"><a href="{% url 'event_detail' reg.event.slug %}" class="text-white text-decoration-none hover-primary">{{ reg.event.title }}</a></h6>
+                                            <small class="text-muted d-block mb-1"><i class="bi bi-calendar3 me-1.5 text-warning"></i>{{ reg.event.start_date|date:"D, d M Y, g:i A" }}</small>
+                                            <small class="text-muted d-flex align-items-center gap-1.5">
+                                                <i class="bi bi-ticket text-primary"></i>{{ reg.ticket_tier.name }}
+                                                <span class="badge badge-status-completed">PAST</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-semibold text-white small mb-2">ID: {{ reg.ticket_id }}</div>
+                                        <a href="{% url 'view_ticket' reg.ticket_id %}" class="btn btn-sm btn-outline-secondary px-3.5" style="border-radius: 20px;">
+                                            <i class="bi bi-file-earmark-text me-1.5"></i>Archived Ticket
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-folder-x fs-1 text-muted mb-3.5"></i>
+                        <h6 class="fw-bold text-white">No archived events</h6>
+                        <p class="text-muted small">Your past completed event records will show up in this folder.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- 5. My Posts Tab -->
+                <div class="tab-pane fade" id="posts" role="tabpanel" aria-labelledby="posts-tab">
+                    {% if my_posts %}
+                        <div class="row g-4">
+                            {% for post in my_posts %}
+                            <div class="col-md-6">
+                                {% include 'events/_event_card.html' with event=post %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-postcard fs-1 text-muted mb-3.5"></i>
+                        <h6 class="fw-bold text-white">No events published</h6>
+                        <p class="text-muted small">You haven't created or published any organized events yet.</p>
+                        {% if profile.role == 'organizer' %}
+                        <a href="{% url 'event_create' %}" class="btn btn-warning btn-sm px-4 text-dark fw-bold mt-2.5 mx-auto" style="width:fit-content; border-radius: 20px;">Create First Event</a>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
             </div>
-            {% endfor %}
-            {% else %}
-            <div class="card p-5 text-center">
-                <i class="bi bi-ticket-perforated fs-1 text-muted mb-3"></i>
-                <h6 class="fw-bold">No registrations yet</h6>
-                <p class="text-muted small">Browse events and register to see your tickets here.</p>
-                <a href="{% url 'event_list' %}" class="btn btn-primary mx-auto" style="width:fit-content;">Browse Events</a>
-            </div>
-            {% endif %}
         </div>
+
     </div>
 </div>
+
+<style>
+#profileTab .nav-link {
+    color: var(--es-text-muted);
+    border-radius: 8px;
+    transition: background 0.22s, color 0.22s;
+    font-size: 0.85rem;
+}
+#profileTab .nav-link.active {
+    background: var(--es-primary);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+}
+#profileTab .nav-link:hover:not(.active) {
+    background: rgba(255,255,255,0.04);
+    color: var(--es-text);
+}
+.btn-social-action:hover {
+    background: rgba(255,255,255,0.06) !important;
+}
+.filter-grayscale {
+    filter: grayscale(1);
+}
+.animate-fade-in {
+    animation: fadeIn 0.35s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+</style>
 {% endblock %}

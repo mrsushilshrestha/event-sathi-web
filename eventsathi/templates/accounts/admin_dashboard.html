@@ -1,0 +1,365 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(249,115,22,0.04)); border-bottom: 1px solid var(--es-border); padding: 2rem 0;">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h3 class="fw-bold mb-1 text-white"><i class="bi bi-shield-shaded me-2 text-warning"></i>Admin Control Center</h3>
+                <p class="text-muted mb-0 small">Platform-wide event oversight and system administration</p>
+            </div>
+            <div>
+                <span class="badge px-3 py-2 rounded-pill bg-danger border border-danger-subtle small fw-semibold">
+                    <span class="d-inline-block rounded-circle bg-white me-1 text-white" style="width:6px;height:6px;animation:pulse 1.2s infinite;vertical-align:middle;"></span>Live System Monitoring
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <!-- Metric Cards -->
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(249,115,22,0.1); color: var(--es-primary);">
+                    <i class="bi bi-calendar-event fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-white">{{ total_events }}</h3>
+                    <small class="text-muted fw-semibold">Total Events Listed</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(16,185,129,0.1); color: var(--es-accent-green);">
+                    <i class="bi bi-people fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-white">{{ total_registrations }}</h3>
+                    <small class="text-muted fw-semibold">Total Registrations</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(6,182,212,0.1); color: var(--es-accent-cyan);">
+                    <i class="bi bi-person-badge fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-white">{{ total_users }}</h3>
+                    <small class="text-muted fw-semibold">Active Accounts</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search / Filter Area -->
+    <div class="card p-4 border mb-4 shadow-sm" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <form method="get" class="row g-3">
+            <input type="hidden" name="tab" value="{{ active_tab }}">
+            <div class="col-lg-6">
+                <div class="input-group">
+                    <span class="input-group-text border-0" style="background: rgba(255,255,255,0.03); color: var(--es-text-muted);"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="{% if active_tab == 'organizers' %}Search organizers by name, username, email or organization...{% else %}Search events by title, organizer, city or venue...{% endif %}" value="{{ q }}">
+                </div>
+            </div>
+            {% if active_tab == 'events' %}
+            <div class="col-lg-3">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="draft" {% if status_filter == 'draft' %}selected{% endif %}>Draft</option>
+                    <option value="published" {% if status_filter == 'published' %}selected{% endif %}>Published</option>
+                    <option value="ongoing" {% if status_filter == 'ongoing' %}selected{% endif %}>Ongoing</option>
+                    <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-lg-3 d-flex gap-2">
+            {% else %}
+            <div class="col-lg-6 d-flex gap-2">
+            {% endif %}
+                <button type="submit" class="btn btn-warning w-100 fw-bold">
+                    <i class="bi bi-funnel me-1"></i>Apply Filter
+                </button>
+                {% if q or status_filter %}
+                <a href="{% url 'admin_dashboard' %}?tab={{ active_tab }}" class="btn btn-outline-secondary" title="Clear Filters">
+                    <i class="bi bi-x-lg"></i>
+                </a>
+                {% endif %}
+            </div>
+        </form>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs border-bottom mb-4" id="adminTabs" role="tablist" style="border-color: var(--es-border)!important;">
+        <li class="nav-item" role="presentation">
+            <a href="?tab=events{% if q %}&q={{ q }}{% endif %}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="nav-link {% if active_tab == 'events' %}active fw-bold text-warning{% else %}text-muted{% endif %}" style="border-radius: 8px 8px 0 0; background: {% if active_tab == 'events' %}var(--es-card-bg){% else %}transparent{% endif %}; border: 1px solid {% if active_tab == 'events' %}var(--es-border){% else %}transparent{% endif %}; border-bottom-color: {% if active_tab == 'events' %}var(--es-card-bg){% else %}transparent{% endif %}; margin-right: 4px; transition: all 0.2s;">
+                <i class="bi bi-calendar-event me-2"></i>Events ({{ events.count }})
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a href="?tab=organizers{% if q %}&q={{ q }}{% endif %}" class="nav-link {% if active_tab == 'organizers' %}active fw-bold text-warning{% else %}text-muted{% endif %}" style="border-radius: 8px 8px 0 0; background: {% if active_tab == 'organizers' %}var(--es-card-bg){% else %}transparent{% endif %}; border: 1px solid {% if active_tab == 'organizers' %}var(--es-border){% else %}transparent{% endif %}; border-bottom-color: {% if active_tab == 'organizers' %}var(--es-card-bg){% else %}transparent{% endif %}; transition: all 0.2s;">
+                <i class="bi bi-person-lines-fill me-2"></i>Organizers ({{ organizers.count }})
+            </a>
+        </li>
+    </ul>
+
+    {% if active_tab == 'events' %}
+    <!-- Events List Panel -->
+    <div class="card border shadow-sm mb-5 overflow-hidden" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <div class="card-header border-bottom p-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.01); border-color: var(--es-border)!important;">
+            <h5 class="fw-bold mb-0 text-white"><i class="bi bi-table me-2 text-muted"></i>All Event Listings</h5>
+            <small class="text-muted">{{ events.count }} records found</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 custom-admin-table" style="color: var(--es-text);">
+                <thead>
+                    <tr class="text-muted" style="border-bottom: 2px solid var(--es-border);">
+                        <th class="ps-4">Event Banner & Title</th>
+                        <th>Organizer</th>
+                        <th>Date & City</th>
+                        <th>Registrations</th>
+                        <th class="text-center">Featured</th>
+                        <th>Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if events %}
+                    {% for event in events %}
+                    <tr style="border-bottom: 1px solid var(--es-border);">
+                        <!-- Thumbnail & Title -->
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3 py-1">
+                                <div style="width: 75px; height: 42px; border-radius: 6px; overflow: hidden; background: var(--es-dark-3); flex-shrink: 0; border: 1px solid var(--es-border);">
+                                    {% if event.banner %}
+                                    <img src="{{ event.banner.url }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-muted" style="font-size: 0.8rem;">
+                                        <i class="bi bi-image"></i>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <a href="{% url 'event_detail' event.slug %}" class="fw-bold text-white text-decoration-none hover-warning" target="_blank" title="View Public Detail Page">
+                                        {{ event.title|truncatewords:6 }}
+                                    </a>
+                                    <div class="small text-muted mt-0.5">{{ event.category.name|default:"Event" }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Organizer Link -->
+                        <td>
+                            <a href="{% url 'organizer_profile' event.organizer.username %}" class="text-warning text-decoration-none fw-semibold small d-inline-flex align-items-center gap-1" target="_blank">
+                                <i class="bi bi-person me-1"></i>@{{ event.organizer.username }}
+                                {% if event.organizer.profile.is_verified %}
+                                <i class="bi bi-patch-check-fill text-success" title="Verified Organizer"></i>
+                                {% endif %}
+                            </a>
+                        </td>
+
+                        <!-- Date & Location -->
+                        <td>
+                            <div class="small fw-semibold">{{ event.start_date|date:"d M Y" }}</div>
+                            <div class="small text-muted mt-0.5"><i class="bi bi-geo-alt me-1"></i>{{ event.city }}</div>
+                        </td>
+
+                        <!-- Registered Progress -->
+                        <td>
+                            <div class="d-flex justify-content-between mb-1" style="font-size: 0.72rem;">
+                                <span>{{ event.get_registered_count }} / {{ event.max_capacity }}</span>
+                            </div>
+                            <div class="progress" style="height: 4px; background: rgba(255,255,255,0.08); width: 110px;">
+                                <div class="progress-bar" style="width: {% widthratio event.get_registered_count event.max_capacity 100 %}%; background: var(--es-primary);"></div>
+                            </div>
+                        </td>
+
+                        <!-- Quick Featured Switcher -->
+                        <td class="text-center">
+                            <form action="{% url 'admin_event_toggle_feature' event.slug %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm text-decoration-none" title="Toggle Featured Status">
+                                    {% if event.is_featured %}
+                                    <i class="bi bi-star-fill fs-5 text-warning"></i>
+                                    {% else %}
+                                    <i class="bi bi-star fs-5 text-secondary hover-warning"></i>
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </td>
+
+                        <!-- Quick Status Switcher -->
+                        <td>
+                            <form action="{% url 'admin_event_change_status' event.slug %}" method="post" class="d-inline-flex align-items-center">
+                                {% csrf_token %}
+                                <select name="status" class="form-select form-select-sm py-0 px-2 text-white bg-dark border-secondary" style="font-size: 0.75rem; border-radius: 6px; width: 115px; height: 28px;" onchange="this.form.submit()">
+                                    <option value="draft" {% if event.status == 'draft' %}selected{% endif %}>Draft</option>
+                                    <option value="published" {% if event.status == 'published' %}selected{% endif %}>Published</option>
+                                    <option value="ongoing" {% if event.status == 'ongoing' %}selected{% endif %}>Ongoing</option>
+                                    <option value="completed" {% if event.status == 'completed' %}selected{% endif %}>Completed</option>
+                                    <option value="cancelled" {% if event.status == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                                </select>
+                            </form>
+                        </td>
+
+                        <!-- Table Row Actions -->
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-2">
+                                <a href="{% url 'admin_event_edit' event.slug %}" class="btn btn-outline-primary btn-sm px-2.5 py-1" title="Administrative Edit">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <a href="{% url 'admin_event_delete' event.slug %}" class="btn btn-outline-danger btn-sm px-2.5 py-1" title="Permanently Delete Event">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                            <span class="text-muted">No events match the search query or filters.</span>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <!-- Organizers List Panel -->
+    <div class="card border shadow-sm mb-5 overflow-hidden" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <div class="card-header border-bottom p-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.01); border-color: var(--es-border)!important;">
+            <h5 class="fw-bold mb-0 text-white"><i class="bi bi-people me-2 text-muted"></i>All Registered Organizers</h5>
+            <small class="text-muted">{{ organizers.count }} records found</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 custom-admin-table" style="color: var(--es-text);">
+                <thead>
+                    <tr class="text-muted" style="border-bottom: 2px solid var(--es-border);">
+                        <th class="ps-4">Organizer Info</th>
+                        <th>Organization & Designation</th>
+                        <th>Contact</th>
+                        <th>Verification Status</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if organizers %}
+                    {% for org in organizers %}
+                    <tr style="border-bottom: 1px solid var(--es-border);">
+                        <!-- Avatar & Profile info -->
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3 py-1">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: var(--es-dark-3); flex-shrink: 0; border: 1px solid var(--es-border); padding: 2px;">
+                                    {% if org.photo %}
+                                    <img src="{{ org.photo.url }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                    {% else %}
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-white fw-bold bg-dark" style="font-size: 0.9rem; border-radius: 50%;">
+                                        {{ org.user.first_name|first|upper }}{{ org.user.last_name|first|upper }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white">{{ org.user.get_full_name|default:org.user.username }}</div>
+                                    <div class="small text-muted">@{{ org.user.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Org/Designation -->
+                        <td>
+                            <div class="small text-white fw-semibold">{{ org.organization|default:"—" }}</div>
+                            <div class="small text-muted">{{ org.designation|default:"Organizer" }}</div>
+                        </td>
+
+                        <!-- Contact -->
+                        <td>
+                            <div class="small text-white"><i class="bi bi-envelope me-1 text-muted"></i>{{ org.user.email }}</div>
+                            {% if org.phone %}
+                            <div class="small text-muted"><i class="bi bi-telephone me-1"></i>{{ org.phone }}</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Verification Status Badge -->
+                        <td>
+                            {% if org.is_verified %}
+                            <span class="badge bg-success border border-success-subtle rounded-pill px-3 py-1.5 small fw-semibold" style="background: rgba(16,185,129,0.15)!important; color: var(--es-accent-green)!important;">
+                                <i class="bi bi-patch-check-fill me-1"></i>Verified
+                            </span>
+                            {% else %}
+                            <span class="badge bg-secondary border border-secondary-subtle rounded-pill px-3 py-1.5 small fw-semibold" style="background: rgba(255,255,255,0.05)!important; color: var(--es-text-muted)!important;">
+                                <i class="bi bi-patch-question me-1"></i>Unverified
+                            </span>
+                            {% endif %}
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-2">
+                                <!-- Verify/Unverify Toggle Button Form -->
+                                <form action="{% url 'admin_organizer_toggle_verification' org.user.id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm {% if org.is_verified %}btn-outline-secondary{% else %}btn-warning{% endif %} fw-semibold px-2.5" title="{% if org.is_verified %}Revoke Verification{% else %}Verify Organizer{% endif %}">
+                                        {% if org.is_verified %}
+                                        <i class="bi bi-shield-x me-1"></i>Unverify
+                                        {% else %}
+                                        <i class="bi bi-shield-check me-1"></i>Verify
+                                        {% endif %}
+                                    </button>
+                                </form>
+                                <a href="{% url 'organizer_profile' org.user.username %}" class="btn btn-outline-primary btn-sm px-2.5" target="_blank" title="Review Profile">
+                                    <i class="bi bi-eye"></i> Review
+                                </a>
+                                <a href="{% url 'admin_organizer_delete' org.user.id %}" class="btn btn-outline-danger btn-sm px-2.5" title="Remove Organizer">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                            <span class="text-muted">No organizers match the search query.</span>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.custom-admin-table th {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding-top: 1.1rem;
+    padding-bottom: 1.1rem;
+}
+.custom-admin-table td {
+    padding-top: 0.95rem;
+    padding-bottom: 0.95rem;
+}
+.custom-admin-table tr:hover {
+    background: rgba(255,255,255,0.015);
+}
+.hover-warning:hover {
+    color: var(--es-primary)!important;
+}
+.input-group input:focus {
+    box-shadow: none;
+    border-color: var(--es-border-strong);
+}
+</style>
+{% endblock %}

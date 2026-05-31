@@ -7,6 +7,20 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    slug = models.SlugField(max_length=100, unique=True)
+    icon = models.CharField(max_length=50, blank=True, help_text="FontAwesome icon name")
+    description = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = "Categories"
+
+    def __str__(self):
+        return self.name
+
+
 class Event(models.Model):
     STATUS_CHOICES = [
         ('draft', 'Draft'),
@@ -27,34 +41,54 @@ class Event(models.Model):
         ('other', 'Other'),
     ]
     organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organized_events')
-    title = models.CharField(max_length=300)
+    title = models.CharField(max_length=300, db_index=True)
     slug = models.SlugField(max_length=300, unique=True)
     description = models.TextField()
-    category = models.CharField(max_length=50, choices=CATEGORY_CHOICES, default='conference')
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, related_name='events')
     banner = models.ImageField(upload_to='event_banners/', blank=True, null=True)
-    start_date = models.DateTimeField()
+    start_date = models.DateTimeField(db_index=True)
     end_date = models.DateTimeField()
     registration_start = models.DateTimeField(blank=True, null=True)
     registration_end = models.DateTimeField(blank=True, null=True)
     venue = models.CharField(max_length=300)
-    city = models.CharField(max_length=100)
+    city = models.CharField(max_length=100, db_index=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     is_virtual = models.BooleanField(default=False)
     virtual_link = models.URLField(blank=True)
+    
+    # Advanced Virtual details
+    meet_link = models.URLField(max_length=500, blank=True, null=True)
+    zoom_link = models.URLField(max_length=500, blank=True, null=True)
+    teams_link = models.URLField(max_length=500, blank=True, null=True)
+    meeting_id = models.CharField(max_length=100, blank=True, null=True)
+    meeting_password = models.CharField(max_length=100, blank=True, null=True)
+    joining_instructions = models.TextField(blank=True, null=True)
+    streaming_link = models.URLField(max_length=500, blank=True, null=True)
+    
     max_capacity = models.PositiveIntegerField(default=100)
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='published')
-    is_featured = models.BooleanField(default=False)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='published', db_index=True)
+    is_featured = models.BooleanField(default=False, db_index=True)
+    is_pinned = models.BooleanField(default=False)
     tags = models.CharField(max_length=500, blank=True)
+    views = models.PositiveIntegerField(default=0)
+    total_likes = models.PositiveIntegerField(default=0)
+    total_bookings = models.PositiveIntegerField(default=0)
+    popularity_score = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
         ordering = ['-start_date']
+        indexes = [
+            models.Index(fields=['status', 'start_date']),
+        ]
 
     def __str__(self):
         return self.title
 
     def get_registered_count(self):
-        return self.registrations.filter(status='confirmed').count()
+        return self.registrations.filter(status__in=['confirmed', 'checked_in']).count()
 
     def get_available_seats(self):
         return self.max_capacity - self.get_registered_count()
@@ -125,21 +159,58 @@ class Registration(models.Model):
     qr_code = models.TextField(blank=True)
     ticket_id = models.CharField(max_length=50, unique=True)
     registered_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     checked_in_at = models.DateTimeField(null=True, blank=True)
     amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
 
     class Meta:
+        ordering = ['-registered_at']
         unique_together = ('user', 'event')
+        indexes = [
+            models.Index(fields=['status', 'registered_at']),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.event.title}"
 
     def generate_qr_code(self):
-        data = f"EVENTSATHI:{self.ticket_id}:{self.user.username}:{self.event.slug}"
+        import hashlib
+        from django.conf import settings
+        secret_key = settings.SECRET_KEY
+        token = hashlib.sha256(f"{self.ticket_id}{secret_key}".encode()).hexdigest()[:8]
+        data = f"EVENTSATHI:{self.ticket_id}:{self.user.id}:{self.event.id}:{token}"
+
         qr = qrcode.QRCode(version=1, box_size=10, border=4)
         qr.add_data(data)
         qr.make(fit=True)
-        img = qr.make_image(fill_color='black', back_color='white')
+        img = qr.make_image(fill_color='black', back_color='white').convert('RGB')
+
+        # Draw central branded text
+        from PIL import ImageDraw, ImageFont
+        draw = ImageDraw.Draw(img)
+        width, height = img.size
+
+        # Center box size
+        box_width, box_height = 110, 35
+        x0 = (width - box_width) // 2
+        y0 = (height - box_height) // 2
+        x1 = x0 + box_width
+        y1 = y0 + box_height
+
+        # White background rectangle with dark teal border
+        draw.rectangle([x0, y0, x1, y1], fill='white', outline='#0F766E', width=2)
+
+        # Try to use a nice font, or fallback to default
+        try:
+            font = ImageFont.load_default()
+        except Exception:
+            font = None
+
+        # Draw text "Event Sathi"
+        text = "Event Sathi"
+        # Center text inside the box
+        draw.text((x0 + 20, y0 + 10), text, fill='#0F766E', font=font)
+
         buffer = io.BytesIO()
         img.save(buffer, format='PNG')
         self.qr_code = base64.b64encode(buffer.getvalue()).decode()
@@ -311,3 +382,137 @@ class QAQuestion(models.Model):
 
     def upvote_count(self):
         return self.upvotes.count()
+
+
+class EventLike(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='likes')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('event', 'user')
+
+    def __str__(self):
+        return f"{self.user.username} liked {self.event.title}"
+
+
+class EventComment(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    parent = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True, related_name='replies')
+    content = models.TextField()
+    likes = models.ManyToManyField(User, related_name='liked_comments', blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['created_at']
+        indexes = [
+            models.Index(fields=['event', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.event.title}"
+
+
+class SavedEvent(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='saved_events')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='saved_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'event')
+
+    def __str__(self):
+        return f"{self.user.username} bookmarked {self.event.title}"
+
+
+class OrganizerFollow(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following_organizers')
+    organizer = models.ForeignKey(User, on_delete=models.CASCADE, related_name='organizer_followers')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'organizer')
+
+    def __str__(self):
+        return f"{self.user.username} follows {self.organizer.username}"
+
+
+class EventInterest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='event_interests')
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='interests')
+    is_interested = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'event')
+
+    def __str__(self):
+        status = "interested" if self.is_interested else "not interested"
+        return f"{self.user.username} is {status} in {self.event.title}"
+
+
+class EventImage(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='images')
+    image = models.ImageField(upload_to='event_images/')
+    caption = models.CharField(max_length=200, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Image for {self.event.title}"
+
+
+class Payment(models.Model):
+    STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+        ('refunded', 'Refunded'),
+    ]
+    registration = models.OneToOneField(Registration, on_delete=models.CASCADE, related_name='payment')
+    transaction_id = models.CharField(max_length=100, unique=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    currency = models.CharField(max_length=10, default='NPR')
+    payment_method = models.CharField(max_length=50) # e.g. Khalti, eSewa, Card
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Payment {self.transaction_id} - {self.status}"
+
+
+class EventAnalytics(models.Model):
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='analytics')
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    action = models.CharField(max_length=50) # e.g. view, like, share, book_attempt
+    platform = models.CharField(max_length=20, default='web') # web, android, ios
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['event', 'action', 'created_at']),
+            models.Index(fields=['created_at']),
+        ]
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications_list')
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    notification_type = models.CharField(max_length=50) # e.g. booking, like, comment, follow, message, OTP, cancellation
+    is_read = models.BooleanField(default=False)
+    related_id = models.IntegerField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['user', 'is_read', 'created_at']),
+        ]
+
+    def __str__(self):
+        return f"Notification for {self.user.username}: {self.title}"
+

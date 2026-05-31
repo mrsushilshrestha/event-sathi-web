@@ -1,0 +1,303 @@
+{% extends 'base.html' %}
+{% block title %}Admin Edit - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, rgba(108,61,225,0.1), rgba(249,115,22,0.05)); border-bottom: 1px solid var(--es-border); padding: 2rem 0;">
+    <div class="container" style="max-width: 860px;">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-arrow-left"></i>
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0 text-white"><i class="bi bi-shield-exclamation text-warning me-2"></i>Administrative Edit</h3>
+                <p class="text-muted mb-0 small">Modifying details for: <strong class="text-white">{{ event.title }}</strong> (Organized by @{{ event.organizer.username }})</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5" style="max-width: 860px;">
+    <form method="post" enctype="multipart/form-data" novalidate>
+        {% csrf_token %}
+
+        <!-- Administrative settings override section -->
+        <div class="form-section mb-4" style="border: 1px solid rgba(245,158,11,0.25)!important; background: rgba(245,158,11,0.02)!important;">
+            <div class="form-section-header" style="background: rgba(245,158,11,0.05); border-bottom: 1px solid rgba(245,158,11,0.15);">
+                <div class="form-section-icon" style="background: rgba(245,158,11,0.15);">
+                    <i class="bi bi-sliders" style="color: #fbbf24;"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-warning">System Controls Override</h5>
+                    <small class="text-muted">Administrative visibility and platform listing state</small>
+                </div>
+            </div>
+            <div class="form-section-body row g-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold text-warning">Event Status</label>
+                    {{ form.status }}
+                    <div class="form-text text-muted">Change to 'Published' to make it visible to attendees.</div>
+                </div>
+                <div class="col-md-6 d-flex align-items-end pb-2">
+                    <div class="form-check">
+                        {{ form.is_featured }}
+                        <label class="form-check-label fw-semibold text-warning" for="{{ form.is_featured.id_for_label }}">
+                            <i class="bi bi-star-fill me-1"></i>Mark as Featured Event
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 1: Basic Info -->
+        <div class="form-section mb-4">
+            <div class="form-section-header">
+                <div class="form-section-icon" style="background: rgba(108,61,225,0.15);">
+                    <i class="bi bi-info-circle-fill" style="color: #a78bfa;"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-white">Basic Information</h5>
+                    <small class="text-muted">Title, category, and description</small>
+                </div>
+            </div>
+            <div class="form-section-body row g-4">
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Event Title <span class="text-danger">*</span></label>
+                    {{ form.title }}
+                    {% if form.title.errors %}<div class="text-danger small mt-1">{{ form.title.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Category <span class="text-danger">*</span></label>
+                    {{ form.category }}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Max Capacity</label>
+                    {{ form.max_capacity }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Description <span class="text-danger">*</span></label>
+                    {{ form.description }}
+                    {% if form.description.errors %}<div class="text-danger small mt-1">{{ form.description.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <label class="form-label fw-semibold">Tags <span class="text-muted fw-normal">(optional)</span></label>
+                    {{ form.tags }}
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 2: Date & Time -->
+        <div class="form-section mb-4">
+            <div class="form-section-header">
+                <div class="form-section-icon" style="background: rgba(245,158,11,0.15);">
+                    <i class="bi bi-calendar-event-fill" style="color: #fbbf24;"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-white">Date & Schedule</h5>
+                    <small class="text-muted">Schedule configuration</small>
+                </div>
+            </div>
+            <div class="form-section-body row g-4">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-play-circle me-1 text-success"></i>Start Date & Time <span class="text-danger">*</span></label>
+                    {{ form.start_date }}
+                    {% if form.start_date.errors %}<div class="text-danger small mt-1">{{ form.start_date.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold"><i class="bi bi-stop-circle me-1 text-danger"></i>End Date & Time <span class="text-danger">*</span></label>
+                    {{ form.end_date }}
+                    {% if form.end_date.errors %}<div class="text-danger small mt-1">{{ form.end_date.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <div class="d-flex align-items-center gap-2 mb-3">
+                        <div style="height: 1px; background: var(--es-border); flex: 1;"></div>
+                        <span class="text-muted small px-2" style="white-space: nowrap;"><i class="bi bi-ticket-perforated me-1 text-warning"></i>Registration Window</span>
+                        <div style="height: 1px; background: var(--es-border); flex: 1;"></div>
+                    </div>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-muted">Registration Opens</label>
+                            {{ form.registration_start }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold text-muted">Registration Closes</label>
+                            {{ form.registration_end }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 3: Venue -->
+        <div class="form-section mb-4">
+            <div class="form-section-header">
+                <div class="form-section-icon" style="background: rgba(59,130,246,0.15);">
+                    <i class="bi bi-geo-alt-fill" style="color: #60a5fa;"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-white">Location</h5>
+                    <small class="text-muted">Where is it happening?</small>
+                </div>
+            </div>
+            <div class="form-section-body row g-4">
+                <div class="col-md-8">
+                    <label class="form-label fw-semibold">Venue <span class="text-danger">*</span></label>
+                    {{ form.venue }}
+                    {% if form.venue.errors %}<div class="text-danger small mt-1">{{ form.venue.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold">City <span class="text-danger">*</span></label>
+                    {{ form.city }}
+                    {% if form.city.errors %}<div class="text-danger small mt-1">{{ form.city.errors.0 }}</div>{% endif %}
+                </div>
+                <div class="col-12">
+                    <div class="virtual-toggle p-3 rounded-3" style="background: rgba(6,182,212,0.06); border: 1px solid rgba(6,182,212,0.2);">
+                        <div class="form-check">
+                            {{ form.is_virtual }}
+                            <label class="form-check-label fw-semibold" for="{{ form.is_virtual.id_for_label }}" style="color: #22d3ee;">
+                                <i class="bi bi-camera-video-fill me-2"></i>This is a virtual or hybrid event
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12" id="virtualLinkRow" style="display: none;">
+                    <label class="form-label fw-semibold" style="color: #22d3ee;"><i class="bi bi-link-45deg me-1"></i>Stream / Meeting Link</label>
+                    {{ form.virtual_link }}
+                </div>
+            </div>
+        </div>
+
+        <!-- SECTION 4: Banner -->
+        <div class="form-section mb-4">
+            <div class="form-section-header">
+                <div class="form-section-icon" style="background: rgba(236,72,153,0.15);">
+                    <i class="bi bi-image-fill" style="color: #f472b6;"></i>
+                </div>
+                <div>
+                    <h5 class="fw-bold mb-0 text-white">Banner Image</h5>
+                    <small class="text-muted">Upload an event banner</small>
+                </div>
+            </div>
+            <div class="form-section-body">
+                {% if event.banner %}
+                <div class="mb-3">
+                    <small class="text-muted d-block mb-1">Current Banner:</small>
+                    <img src="{{ event.banner.url }}" class="rounded-3" style="max-height: 150px; object-fit: cover; max-width: 100%;">
+                </div>
+                {% endif %}
+                <div class="banner-upload-zone" id="bannerZone">
+                    <input type="file" name="banner" id="bannerInput" accept="image/*" class="d-none" onchange="previewBanner(this)">
+                    <div id="bannerPreview" style="display: none; position: relative;">
+                        <img id="bannerImg" src="#" class="w-100 rounded-3" style="max-height: 200px; object-fit: cover;">
+                        <button type="button" class="btn btn-sm btn-danger position-absolute" style="top: 8px; right: 8px;" onclick="removeBanner()">
+                            <i class="bi bi-x-lg"></i>
+                        </button>
+                    </div>
+                    <div id="bannerPlaceholder" class="text-center py-4" style="cursor: pointer;" onclick="document.getElementById('bannerInput').click()">
+                        <i class="bi bi-cloud-arrow-up fs-2 text-muted mb-2 d-block"></i>
+                        <div class="fw-semibold text-muted">Click to select new banner image</div>
+                    </div>
+                </div>
+                {% if form.banner.errors %}<div class="text-danger small mt-2">{{ form.banner.errors.0 }}</div>{% endif %}
+            </div>
+        </div>
+
+        {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-4"><i class="bi bi-exclamation-triangle me-2"></i>{{ form.non_field_errors.0 }}</div>
+        {% endif %}
+
+        <div class="d-flex gap-3 align-items-center mb-5">
+            <button type="submit" class="btn btn-warning btn-lg px-5 fw-bold" style="min-width: 180px;">
+                <i class="bi bi-save me-2"></i>Save Overrides
+            </button>
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-outline-secondary btn-lg px-4">Cancel</a>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-section {
+    border-radius: 16px;
+    border: 1px solid var(--es-border);
+    overflow: hidden;
+    background: var(--es-dark-2);
+}
+.form-section-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--es-border);
+    background: rgba(255,255,255,0.02);
+}
+.form-section-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.form-section-body {
+    padding: 1.5rem;
+}
+.banner-upload-zone {
+    border: 2px dashed var(--es-border);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: border-color .2s;
+}
+.banner-upload-zone:hover { border-color: var(--es-primary); }
+
+input[type="datetime-local"],
+input[type="text"],
+input[type="number"],
+input[type="url"],
+select,
+textarea {
+    width: 100%;
+    display: block;
+    background: rgba(255,255,255,0.04) !important;
+    border: 1px solid var(--es-border) !important;
+    border-radius: 8px !important;
+    color: #fff !important;
+    padding: .55rem .85rem;
+}
+input[type="datetime-local"]:focus,
+input[type="text"]:focus,
+input[type="number"]:focus,
+input[type="url"]:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--es-primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(108,61,225,.18) !important;
+    background: rgba(108,61,225,0.07) !important;
+}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator { filter: invert(1); opacity: .5; }
+select option { background: #1a1a2e; color: #fff; }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var virt = document.querySelector('#id_is_virtual');
+    var row  = document.getElementById('virtualLinkRow');
+    function toggle() { row.style.display = virt.checked ? 'block' : 'none'; }
+    if (virt) { virt.addEventListener('change', toggle); toggle(); }
+});
+function previewBanner(input) {
+    if (input.files && input.files[0]) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('bannerImg').src = e.target.result;
+            document.getElementById('bannerPreview').style.display = 'block';
+            document.getElementById('bannerPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+function removeBanner() {
+    document.getElementById('bannerInput').value = '';
+    document.getElementById('bannerPreview').style.display = 'none';
+    document.getElementById('bannerPlaceholder').style.display = 'block';
+}
+</script>
+{% endblock %}

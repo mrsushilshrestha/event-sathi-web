@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Manage Attendees - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="fw-bold mb-0">Manage Attendees</h3>
+                <small class="text-muted">{{ event.title }} · {{ attendees.count }} Registered</small>
+            </div>
+            <div class="d-flex gap-2">
+                <a href="{% url 'export_attendees' event.slug %}" class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-download me-1"></i>Export CSV
+                </a>
+                <a href="{% url 'event_manage' event.slug %}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-4">
+    <div class="card p-4 border shadow-sm mb-4" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <form method="get" class="row g-3">
+            <div class="col-lg-6">
+                <div class="input-group">
+                    <span class="input-group-text border-0 bg-dark text-muted"><i class="bi bi-search"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Search by name, email or ticket ID..." value="{{ q }}">
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <select name="status" class="form-select">
+                    <option value="">All Statuses</option>
+                    <option value="confirmed" {% if status_filter == 'confirmed' %}selected{% endif %}>Confirmed</option>
+                    <option value="checked_in" {% if status_filter == 'checked_in' %}selected{% endif %}>Checked In</option>
+                    <option value="cancelled" {% if status_filter == 'cancelled' %}selected{% endif %}>Cancelled</option>
+                </select>
+            </div>
+            <div class="col-lg-2">
+                <button type="submit" class="btn btn-primary w-100 fw-bold">Filter</button>
+            </div>
+        </form>
+    </div>
+
+    <div class="card border shadow-sm overflow-hidden" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 text-white">
+                <thead class="bg-dark">
+                    <tr class="text-muted" style="border-bottom: 2px solid var(--es-border);">
+                        <th class="ps-4">Attendee</th>
+                        <th>Ticket ID</th>
+                        <th>Tier</th>
+                        <th>Paid</th>
+                        <th>Registered At</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for reg in attendees %}
+                    <tr style="border-bottom: 1px solid var(--es-border);">
+                        <td class="ps-4">
+                            <div class="fw-bold">{{ reg.user.get_full_name|default:reg.user.username }}</div>
+                            <small class="text-muted">{{ reg.user.email }}</small>
+                        </td>
+                        <td><code class="text-warning">{{ reg.ticket_id }}</code></td>
+                        <td>{{ reg.ticket_tier.name }}</td>
+                        <td>₹{{ reg.amount_paid|floatformat:0 }}</td>
+                        <td><small class="text-muted">{{ reg.registered_at|date:"M d, Y" }}</small></td>
+                        <td>
+                            <span class="badge badge-status-{{ reg.status }}">{{ reg.get_status_display }}</span>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5 text-muted">
+                            <i class="bi bi-people fs-1 d-block mb-2"></i>
+                            No attendees found.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

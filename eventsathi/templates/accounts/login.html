@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Sign In{% endblock %}
 
 {% block content %}
@@ -6,23 +7,50 @@
     <div class="container">
         <div class="auth-card">
             <div class="text-center mb-4">
-                <div class="auth-logo mb-2">
-                    <i class="bi bi-calendar-event-fill me-2" style="color:var(--es-primary)"></i>
-                    <span>EventSathi</span>
+                <div class="auth-logo mb-2 d-flex align-items-center justify-content-center">
+                    <img src="{% static 'images/logo.png' %}" alt="EventSathi" style="height: 48px; width: auto;" class="me-2">
+                    <span>Event-Sathi</span>
                 </div>
                 <h4 class="fw-bold">Welcome back</h4>
-                <p class="text-muted small">Sign in to your EventSathi account</p>
+                <p class="text-muted small">Sign in to your Event-Sathi account</p>
             </div>
 
             <form method="post" novalidate>
                 {% csrf_token %}
+                
+                <!-- Role Selection -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Sign in as...</label>
+                    <input type="hidden" name="role" id="roleInput" value="attendee">
+                    {% if form.role.errors %}<div class="text-danger small mb-2">{{ form.role.errors.0 }}</div>{% endif %}
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="role-card selected" id="roleAttendee" onclick="selectRole('attendee')"
+                                 style="cursor:pointer;padding:1rem;border-radius:12px;border:2px solid var(--es-primary);background:rgba(249,115,22,0.1);text-align:center;transition:all .2s;">
+                                <i class="bi bi-person-circle fs-2 d-block mb-1" style="color:var(--es-primary)"></i>
+                                <div class="fw-bold text-white" style="font-size:0.9rem;">Attendee</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="role-card" id="roleOrganizer" onclick="selectRole('organizer')"
+                                 style="cursor:pointer;padding:1rem;border-radius:12px;border:2px solid var(--es-border);background:var(--es-input-bg);text-align:center;transition:all .2s;">
+                                <i class="bi bi-briefcase fs-2 d-block mb-1" style="color:var(--es-primary)"></i>
+                                <div class="fw-bold" style="font-size:0.9rem;">Organizer</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="mb-3">
-                    <label class="form-label">Username</label>
+                    <label class="form-label">Email Address</label>
                     {{ form.username }}
                     {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
                 </div>
                 <div class="mb-3">
-                    <label class="form-label">Password</label>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label mb-0">Password</label>
+                        <a href="{% url 'forgot_password' %}" class="small text-decoration-none" style="color:var(--es-primary); font-size: 0.8rem;">Forgot Password?</a>
+                    </div>
                     <div class="input-group">
                         {{ form.password }}
                         <button type="button" class="btn btn-outline-secondary show-pass-btn" tabindex="-1" data-target="id_password">
@@ -52,9 +80,37 @@
 .auth-wrapper .input-group input { border-right: none !important; border-radius: var(--es-radius-sm) 0 0 var(--es-radius-sm) !important; }
 .auth-wrapper .input-group .show-pass-btn { border-left: none; background: var(--es-input-bg); border-color: var(--es-input-border); color: var(--es-text-muted); }
 .auth-wrapper .input-group .show-pass-btn:hover { color: var(--es-primary); background: var(--es-input-bg); }
+.role-card:hover { transform: translateY(-2px); }
 </style>
 
 <script>
+function selectRole(role) {
+    document.getElementById('roleInput').value = role;
+    const attendeeCard = document.getElementById('roleAttendee');
+    const organizerCard = document.getElementById('roleOrganizer');
+    const primary = getComputedStyle(document.documentElement).getPropertyValue('--es-primary').trim();
+    const border = getComputedStyle(document.documentElement).getPropertyValue('--es-border').trim();
+    const inputBg = getComputedStyle(document.documentElement).getPropertyValue('--es-input-bg').trim();
+    
+    if (role === 'attendee') {
+        attendeeCard.style.borderColor = primary;
+        attendeeCard.style.background = 'rgba(249,115,22,0.1)';
+        attendeeCard.querySelector('.fw-bold').classList.add('text-white');
+        
+        organizerCard.style.borderColor = border;
+        organizerCard.style.background = inputBg;
+        organizerCard.querySelector('.fw-bold').classList.remove('text-white');
+    } else {
+        organizerCard.style.borderColor = primary;
+        organizerCard.style.background = 'rgba(249,115,22,0.1)';
+        organizerCard.querySelector('.fw-bold').classList.add('text-white');
+        
+        attendeeCard.style.borderColor = border;
+        attendeeCard.style.background = inputBg;
+        attendeeCard.querySelector('.fw-bold').classList.remove('text-white');
+    }
+}
+
 document.querySelectorAll('.show-pass-btn').forEach(function(btn) {
     btn.addEventListener('click', function() {
         const input = document.getElementById(this.getAttribute('data-target'));

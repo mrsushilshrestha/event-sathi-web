@@ -1,0 +1,378 @@
+{% extends 'base.html' %}
+{% block title %}{{ organizer.get_full_name|default:organizer.username }} - Organizer Profile{% endblock %}
+
+{% block content %}
+<!-- Premium Cover Photo Banner Section (Facebook Page Layout) -->
+<div class="position-relative" style="background: linear-gradient(135deg, #1e1b4b, #311042, #0f172a); border-bottom: 1px solid var(--es-border);">
+    <!-- Vibrant Dynamic Gradient Background acting as premium cover banner -->
+    <div class="organizer-cover-banner position-relative" style="height: 240px; overflow: hidden; background: linear-gradient(135deg, var(--es-primary) 0%, var(--es-secondary) 50%, var(--es-accent-pink) 100%); opacity: 0.85;">
+        <div class="glass-overlay position-absolute w-100 h-100" style="background: radial-gradient(circle at 80% 20%, rgba(255,255,255,0.08) 0%, transparent 80%);"></div>
+    </div>
+
+    <!-- Organizer Profile Info Header Overlay -->
+    <div class="container position-relative" style="margin-top: -60px; z-index: 5;">
+        <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end justify-content-between gap-4 pb-4 border-bottom" style="border-color: var(--es-border)!important;">
+            
+            <!-- Left: Profile Avatar Overlapping & Info -->
+            <div class="d-flex flex-column flex-md-row align-items-center align-items-md-end gap-3.5 text-center text-md-start">
+                <div class="avatar-container position-relative mb-2 mb-md-0" style="padding: 4px; background: var(--es-bg); border-radius: 50%; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+                    {% if profile.photo %}
+                    <img src="{{ profile.photo.url }}" class="rounded-circle border border-2" style="width: 120px; height: 120px; object-fit: cover; border-color: var(--es-border-strong)!important;" alt="{{ organizer.username }}">
+                    {% else %}
+                    <div class="avatar-sm rounded-circle d-flex align-items-center justify-content-center fw-bold text-white fs-1" style="width: 120px; height: 120px; background: linear-gradient(135deg, var(--es-primary), var(--es-secondary));">
+                        {{ organizer.first_name|first|upper }}{{ organizer.last_name|first|upper }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="profile-info-block">
+                    <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-2 mb-1.5">
+                        <h2 class="fw-bold text-white mb-0" style="font-size: 1.8rem; letter-spacing: -0.02em;">
+                            {{ organizer.get_full_name|default:organizer.username }}
+                        </h2>
+                        {% if profile.is_verified %}
+                        <i class="bi bi-patch-check-fill text-success fs-4" title="Verified Organizer" data-bs-toggle="tooltip"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <p class="text-muted small mb-2 d-flex flex-wrap align-items-center justify-content-center justify-content-md-start gap-2">
+                        <span>@{{ organizer.username }}</span>
+                        {% if profile.organization %}
+                        <span>•</span>
+                        <span class="text-white fw-medium">{{ profile.designation|default:"Organizer" }} at {{ profile.organization }}</span>
+                        {% endif %}
+                    </p>
+
+                    <!-- Stats Badges Bar -->
+                    <div class="d-flex flex-wrap gap-3.5 mt-2 justify-content-center justify-content-md-start text-muted" style="font-size: 0.85rem;">
+                        <div class="d-flex align-items-center gap-1.5">
+                            <i class="bi bi-people-fill text-warning"></i>
+                            <span class="fw-bold text-white" id="org-followers-count">{{ followers_count }}</span> followers
+                        </div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            <i class="bi bi-calendar-event text-primary"></i>
+                            <span class="fw-bold text-white">{{ all_events.count }}</span> hosted events
+                        </div>
+                        <div class="d-flex align-items-center gap-1.5">
+                            <i class="bi bi-clock-history text-success"></i>
+                            <span class="fw-bold text-white">{{ upcoming_events.count }}</span> upcoming
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right: Premium Interactive Controls (Follow/Unfollow + Message Modal Trigger) -->
+            <div class="d-flex align-items-center gap-2.5">
+                {% if user.is_authenticated %}
+                    {% if user != organizer %}
+                    <button class="btn {% if is_following %}btn-outline-light{% else %}btn-warning text-dark{% endif %} px-4 py-2.5 fw-bold d-flex align-items-center gap-2" id="org-follow-btn" onclick="toggleOrganizerFollow(event, {{ organizer.id }}, 'org-follow-btn')" style="border-radius: 20px; transition: all 0.25s;">
+                        {% if is_following %}
+                        <i class="bi bi-person-check-fill"></i><span>Following</span>
+                        {% else %}
+                        <i class="bi bi-person-plus-fill"></i><span>Follow</span>
+                        {% endif %}
+                    </button>
+
+                    <button class="btn btn-outline-warning px-4 py-2.5 fw-semibold d-flex align-items-center gap-2" data-bs-toggle="modal" data-bs-target="#messageModal" style="border-radius: 20px;">
+                        <i class="bi bi-chat-dots-fill"></i><span>Message</span>
+                    </button>
+                    {% else %}
+                    <a href="{% url 'my_events' %}" class="btn btn-outline-light px-4 py-2.5 fw-semibold d-flex align-items-center gap-2" style="border-radius: 20px;">
+                        <i class="bi bi-grid-fill"></i><span>Manage Console</span>
+                    </a>
+                    {% endif %}
+                {% else %}
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-warning px-4 py-2.5 fw-bold text-dark d-flex align-items-center gap-2" style="border-radius: 20px;">
+                    <i class="bi bi-person-plus-fill"></i><span>Follow Organizer</span>
+                </a>
+                <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-outline-light px-4 py-2.5 fw-semibold d-flex align-items-center gap-2" style="border-radius: 20px;">
+                    <i class="bi bi-chat-dots-fill"></i><span>Message</span>
+                </a>
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row g-4.5">
+        
+        <!-- Left Column: Content Tabs Navigation & Organizer Overview Bio -->
+        <div class="col-lg-4">
+            <!-- Navigation Sidebar Pill Card -->
+            <div class="card p-3 border mb-4" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important; box-shadow: var(--es-shadow-card);">
+                <h6 class="fw-bold text-white mb-3 px-2" style="font-size:0.8rem; text-transform:uppercase; letter-spacing:0.08em; opacity:0.6;">Navigation</h6>
+                <div class="nav flex-column nav-pills" id="organizerTab" role="tablist">
+                    <button class="nav-link active text-start py-2.5 px-3 mb-1.5 fw-semibold d-flex align-items-center justify-content-between" id="feed-tab" data-bs-toggle="tab" data-bs-target="#feed" type="button" role="tab" aria-controls="feed" aria-selected="true">
+                        <span class="d-flex align-items-center gap-2.5"><i class="bi bi-card-list"></i>Posts Feed</span>
+                        <span class="badge bg-secondary text-white-50" style="font-size:0.7rem;">{{ all_events.count }}</span>
+                    </button>
+                    <button class="nav-link text-start py-2.5 px-3 mb-1.5 fw-semibold d-flex align-items-center justify-content-between" id="upcoming-tab" data-bs-toggle="tab" data-bs-target="#upcoming" type="button" role="tab" aria-controls="upcoming" aria-selected="false">
+                        <span class="d-flex align-items-center gap-2.5"><i class="bi bi-calendar-event"></i>Upcoming</span>
+                        <span class="badge bg-secondary text-white-50" style="font-size:0.7rem;">{{ upcoming_events.count }}</span>
+                    </button>
+                    <button class="nav-link text-start py-2.5 px-3 mb-1.5 fw-semibold d-flex align-items-center justify-content-between" id="past-tab" data-bs-toggle="tab" data-bs-target="#past" type="button" role="tab" aria-controls="past" aria-selected="false">
+                        <span class="d-flex align-items-center gap-2.5"><i class="bi bi-calendar-check"></i>Past Events</span>
+                        <span class="badge bg-secondary text-white-50" style="font-size:0.7rem;">{{ past_events.count }}</span>
+                    </button>
+                    <button class="nav-link text-start py-2.5 px-3 fw-semibold d-flex align-items-center gap-2.5" id="about-tab" data-bs-toggle="tab" data-bs-target="#about" type="button" role="tab" aria-controls="about" aria-selected="false">
+                        <i class="bi bi-info-circle"></i>About Organizer
+                    </button>
+                </div>
+            </div>
+
+            <!-- Profile Biography/Meta Card -->
+            <div class="card p-4 border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <h6 class="fw-bold mb-3.5 text-white d-flex align-items-center gap-2"><i class="bi bi-card-text text-warning"></i>Profile Summary</h6>
+                
+                {% if profile.bio %}
+                <p class="text-secondary small mb-4" style="line-height: 1.6; white-space: pre-wrap;">{{ profile.bio }}</p>
+                {% else %}
+                <p class="text-muted small mb-4 italic">No public biography posted yet.</p>
+                {% endif %}
+                
+                <h6 class="fw-bold mb-2.5 text-white" style="font-size: 0.85rem;">Contact & Channels</h6>
+                <div class="d-flex flex-column gap-2 text-muted mb-4" style="font-size: 0.8rem;">
+                    {% if organizer.email %}
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-envelope"></i><span>{{ organizer.email }}</span></div>
+                    {% endif %}
+                    {% if profile.phone %}
+                    <div class="d-flex align-items-center gap-2"><i class="bi bi-telephone"></i><span>{{ profile.phone }}</span></div>
+                    {% endif %}
+                </div>
+
+                <!-- Social Connect Buttons -->
+                <div class="d-flex gap-2">
+                    {% if profile.website %}
+                    <a href="{{ profile.website }}" target="_blank" class="btn btn-social-action d-flex align-items-center justify-content-center rounded-circle border" style="width:36px; height:36px; background:rgba(255,255,255,0.02); border-color:var(--es-border)!important;" title="Official Website"><i class="bi bi-globe"></i></a>
+                    {% endif %}
+                    {% if profile.linkedin %}
+                    <a href="{{ profile.linkedin }}" target="_blank" class="btn btn-social-action d-flex align-items-center justify-content-center rounded-circle border" style="width:36px; height:36px; background:rgba(255,255,255,0.02); border-color:var(--es-border)!important;" title="LinkedIn"><i class="bi bi-linkedin"></i></a>
+                    {% endif %}
+                    {% if profile.twitter %}
+                    <a href="{{ profile.twitter }}" target="_blank" class="btn btn-social-action d-flex align-items-center justify-content-center rounded-circle border" style="width:36px; height:36px; background:rgba(255,255,255,0.02); border-color:var(--es-border)!important;" title="Twitter/X"><i class="bi bi-twitter-x"></i></a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Interactive Tabs Content Feed Pane -->
+        <div class="col-lg-8">
+            <div class="tab-content" id="organizerTabContent">
+                
+                <!-- Tab 1: Posts Feed (Facebook-style event cards layout) -->
+                <div class="tab-pane fade show active" id="feed" role="tabpanel" aria-labelledby="feed-tab">
+                    {% if all_events %}
+                        {% for event in all_events %}
+                            {% include 'events/_event_card.html' with event=event %}
+                        {% endfor %}
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-postcard fs-1 text-muted mb-3.5"></i>
+                        <h5 class="fw-bold text-white">No feed updates</h5>
+                        <p class="text-muted small mb-0">This organizer hasn't posted any event feed updates yet.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Tab 2: Upcoming Events -->
+                <div class="tab-pane fade" id="upcoming" role="tabpanel" aria-labelledby="upcoming-tab">
+                    {% if upcoming_events %}
+                        {% for event in upcoming_events %}
+                            {% include 'events/_event_card.html' with event=event %}
+                        {% endfor %}
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-calendar-x fs-1 text-muted mb-3.5"></i>
+                        <h5 class="fw-bold text-white">No upcoming events</h5>
+                        <p class="text-muted small mb-0">There are no upcoming scheduled events at the moment.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Tab 3: Past Events -->
+                <div class="tab-pane fade" id="past" role="tabpanel" aria-labelledby="past-tab">
+                    {% if past_events %}
+                        {% for event in past_events %}
+                            {% include 'events/_event_card.html' with event=event %}
+                        {% endfor %}
+                    {% else %}
+                    <div class="card p-5 text-center border" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <i class="bi bi-archive fs-1 text-muted mb-3.5"></i>
+                        <h5 class="fw-bold text-white">No past events</h5>
+                        <p class="text-muted small mb-0">No past events have been archived for this organizer profile.</p>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Tab 4: Detailed About Profile -->
+                <div class="tab-pane fade" id="about" role="tabpanel" aria-labelledby="about-tab">
+                    <div class="card p-4.5 border mb-4" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                        <h4 class="fw-bold text-white mb-4">About the Organization</h4>
+                        
+                        <div class="row g-4">
+                            {% if profile.organization %}
+                            <div class="col-md-6">
+                                <div class="p-3.5 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--es-border);">
+                                    <small class="text-muted d-block mb-1">Company / Organization</small>
+                                    <div class="fw-bold text-white">{{ profile.organization }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            {% if profile.designation %}
+                            <div class="col-md-6">
+                                <div class="p-3.5 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--es-border);">
+                                    <small class="text-muted d-block mb-1">Designation</small>
+                                    <div class="fw-bold text-white">{{ profile.designation }}</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                            <div class="col-md-6">
+                                <div class="p-3.5 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--es-border);">
+                                    <small class="text-muted d-block mb-1">Joined EventSathi</small>
+                                    <div class="fw-bold text-white">{{ profile.created_at|date:"M d, Y" }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="p-3.5 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--es-border);">
+                                    <small class="text-muted d-block mb-1">Verified Status</small>
+                                    <div class="fw-bold text-success d-flex align-items-center gap-1.5">
+                                        {% if profile.is_verified %}
+                                        <i class="bi bi-patch-check-fill"></i>Verified Partner
+                                        {% else %}
+                                        <span class="text-muted italic">Awaiting Verification</span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% if profile.bio %}
+                        <h6 class="fw-bold text-white mt-4 mb-2.5">Detailed Bio</h6>
+                        <div class="p-4 rounded-3 text-secondary" style="background: rgba(255,255,255,0.01); border: 1px solid var(--es-border); font-size: 0.9rem; line-height: 1.7; white-space: pre-wrap;">{{ profile.bio }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- AJAX Direct Message Popup Modal -->
+{% if user.is_authenticated and user != organizer %}
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border" style="background: var(--es-dd-bg); border-color: var(--es-border)!important; border-radius: var(--es-radius);">
+            <div class="modal-header border-bottom" style="border-color: var(--es-border)!important;">
+                <h5 class="modal-title fw-bold text-white d-flex align-items-center gap-2" id="messageModalLabel">
+                    <i class="bi bi-chat-left-dots text-warning"></i>Message {{ organizer.get_full_name|default:organizer.username }}
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close" style="box-shadow:none;"></button>
+            </div>
+            <div class="modal-body py-3.5">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    {% if profile.photo %}
+                    <img src="{{ profile.photo.url }}" class="rounded-circle border" style="width:40px; height:40px; object-fit:cover; border-color:var(--es-border)!important;" alt="">
+                    {% else %}
+                    <div class="avatar-sm d-flex align-items-center justify-content-center text-white fw-bold" style="width:40px; height:40px; border-radius:50%; background:linear-gradient(135deg, var(--es-primary), var(--es-secondary)); font-size:0.9rem;">
+                        {{ organizer.first_name|first|upper }}{{ organizer.last_name|first|upper }}
+                    </div>
+                    {% endif %}
+                    <div>
+                        <div class="fw-semibold text-white">{{ organizer.get_full_name|default:organizer.username }}</div>
+                        <small class="text-muted">Direct dialog is verified and encrypted.</small>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="messageModalContent" class="form-label text-muted small fw-semibold">Your Message</label>
+                    <textarea class="form-control" id="messageModalContent" rows="4" placeholder="Write a gorgeous, detailed message..." style="border-radius:12px; resize:none; background:var(--es-input-bg); border-color:var(--es-border-strong); font-size:0.9rem;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer border-top" style="border-color: var(--es-border)!important;">
+                <button type="button" class="btn btn-outline-light px-3.5" data-bs-dismiss="modal" style="border-radius:20px;">Cancel</button>
+                <button type="button" class="btn btn-warning px-4 text-dark fw-bold" onclick="sendModalDirectMessage({{ organizer.id }})" id="modal-send-btn" style="border-radius:20px;">
+                    <i class="bi bi-send-fill me-1.5"></i>Send Message
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<style>
+#organizerTab .nav-link {
+    color: var(--es-text-muted);
+    border-radius: 10px;
+    transition: background 0.22s, color 0.22s, transform 0.15s;
+    font-size: 0.9rem;
+}
+#organizerTab .nav-link.active {
+    background: var(--es-primary);
+    color: #fff;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.25);
+    transform: translateX(4px);
+}
+#organizerTab .nav-link:hover:not(.active) {
+    background: rgba(255,255,255,0.04);
+    color: var(--es-text);
+}
+.btn-social-action:hover {
+    background: rgba(255,255,255,0.06) !important;
+    transform: translateY(-2px);
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    function sendModalDirectMessage(receiverId) {
+        const textarea = document.getElementById('messageModalContent');
+        const sendBtn = document.getElementById('modal-send-btn');
+        if (!textarea) return;
+        
+        const content = textarea.value.trim();
+        if (!content) return;
+
+        // Disable button while processing
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<span class="spinner-border spinner-border-sm text-dark me-1" role="status"></span>Sending...';
+
+        fetch('/events/ajax/messages/send/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                receiver_id: receiverId,
+                content: content
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="bi bi-send-fill me-1.5"></i>Send Message';
+            
+            if (data.status === 'success') {
+                textarea.value = '';
+                // Hide modal using bootstrap API
+                const modalEl = document.getElementById('messageModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                if (modal) modal.hide();
+                showGlobalToast('✉️ Message sent successfully!');
+            } else {
+                showGlobalToast(data.message || 'Failed to send message.');
+            }
+        })
+        .catch(err => {
+            sendBtn.disabled = false;
+            sendBtn.innerHTML = '<i class="bi bi-send-fill me-1.5"></i>Send Message';
+            console.error('Direct Message modal error:', err);
+        });
+    }
+</script>
+{% endblock %}

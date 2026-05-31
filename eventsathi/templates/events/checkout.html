@@ -1,0 +1,361 @@
+{% extends 'base.html' %}
+{% block title %}Secure Checkout - {{ event.title }}{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width: 680px;">
+    
+    <!-- Unified Checkout Wizard Header -->
+    <div class="text-center mb-5 animate-fade-in">
+        <h3 class="fw-bold text-white mb-2"><i class="bi bi-shield-lock text-warning me-2"></i>Secure Gateway</h3>
+        <p class="text-muted small">EventSathi Simulated Payment Gateway & Ticketing Hub</p>
+        
+        <!-- Multi-step Indicator -->
+        <div class="d-flex align-items-center justify-content-center gap-3.5 mt-4" style="font-size: 0.8rem; font-weight: 600;">
+            <span class="step-indicator active" id="step-ind-1">1. Summary</span>
+            <i class="bi bi-chevron-right text-muted"></i>
+            <span class="step-indicator" id="step-ind-2">2. Payment</span>
+            <i class="bi bi-chevron-right text-muted"></i>
+            <span class="step-indicator" id="step-ind-3">3. Verification</span>
+            <i class="bi bi-chevron-right text-muted"></i>
+            <span class="step-indicator" id="step-ind-4">4. Ticket</span>
+        </div>
+    </div>
+
+    <!-- MAIN INTERACTIVE CONTAINER CARD -->
+    <div class="card border shadow-lg overflow-hidden animate-fade-in" style="background: var(--es-card-bg); border-color: var(--es-border)!important; border-radius: var(--es-radius);">
+        
+        <!-- Step 1: Summary Panel -->
+        <div class="checkout-step-panel p-4 px-sm-5" id="step-panel-1">
+            <h5 class="fw-bold text-white mb-4"><i class="bi bi-receipt text-warning me-2"></i>Order Summary</h5>
+            
+            <div class="d-flex gap-3 mb-4 p-3 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px solid var(--es-border);">
+                {% if event.banner %}
+                <img src="{{ event.banner.url }}" class="rounded-2" style="width: 80px; height: 80px; object-fit: cover;" alt="">
+                {% else %}
+                <div class="d-flex align-items-center justify-content-center bg-secondary rounded-2" style="width:80px; height:80px;"><i class="bi bi-image text-white-50"></i></div>
+                {% endif %}
+                <div>
+                    <h6 class="fw-bold text-white mb-1">{{ event.title }}</h6>
+                    <small class="text-muted d-block mb-1"><i class="bi bi-calendar-event me-1 text-warning"></i>{{ event.start_date|date:"D, d M Y" }}</small>
+                    <small class="text-muted"><i class="bi bi-ticket-perforated me-1 text-primary"></i>Tier: <strong class="text-white-50">{{ tier.name }}</strong></small>
+                </div>
+            </div>
+
+            <!-- Price Calculations -->
+            <div class="d-flex flex-column gap-3 mb-4.5" style="font-size: 0.9rem;">
+                <div class="d-flex justify-content-between text-secondary">
+                    <span>Ticket Subtotal</span>
+                    <span>₹{{ tier.price|floatformat:2 }}</span>
+                </div>
+                <div class="d-flex justify-content-between text-secondary">
+                    <span>Processing Gateway Fee (Simulated)</span>
+                    <span class="text-success">FREE</span>
+                </div>
+                <hr class="my-1" style="border-color: var(--es-border)!important;">
+                <div class="d-flex justify-content-between fw-bold text-white fs-5">
+                    <span>Total Amount</span>
+                    <span class="text-warning">₹{{ tier.price|floatformat:2 }}</span>
+                </div>
+            </div>
+
+            <button class="btn btn-warning w-100 py-2.5 text-dark fw-bold" onclick="goToStep(2)" style="border-radius: 20px;">
+                Proceed to Payment<i class="bi bi-arrow-right ms-1.5"></i>
+            </button>
+        </div>
+
+        <!-- Step 2: Payment Portal Selection and Credentials Panel -->
+        <div class="checkout-step-panel p-4 px-sm-5 d-none" id="step-panel-2">
+            <h5 class="fw-bold text-white mb-4"><i class="bi bi-wallet2 text-warning me-2"></i>Select Payment Method</h5>
+            
+            <div class="row g-3.5 mb-4.5">
+                <div class="col-6">
+                    <div class="payment-method-card active text-center p-4 border rounded-4 cursor-pointer" onclick="selectPayment('esewa')" id="method-esewa" style="background: rgba(255,255,255,0.01); border-radius: 16px; border-color: var(--es-border); transition: all 0.22s;">
+                        <!-- eSewa Green styling -->
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2" style="width: 50px; height: 50px; background: rgba(96,187,70,0.15); color: #60bb46;">
+                            <i class="bi bi-circle-fill" style="font-size: 1.1rem;"></i>
+                        </div>
+                        <div class="fw-bold text-white" style="font-size: 0.95rem;">eSewa Wallet</div>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="payment-method-card text-center p-4 border rounded-4 cursor-pointer" onclick="selectPayment('khalti')" id="method-khalti" style="background: rgba(255,255,255,0.01); border-radius: 16px; border-color: var(--es-border); transition: all 0.22s;">
+                        <!-- Khalti Purple styling -->
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-2" style="width: 50px; height: 50px; background: rgba(92,37,141,0.15); color: #5c258d;">
+                            <i class="bi bi-wallet-fill" style="font-size: 1.1rem;"></i>
+                        </div>
+                        <div class="fw-bold text-white" style="font-size: 0.95rem;">Khalti Wallet</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Portal Form Box -->
+            <div class="p-4 rounded-4 mb-4 border" id="portal-fields-box" style="background: rgba(255,255,255,0.02); border-color: var(--es-border)!important;">
+                <div class="d-flex align-items-center gap-2.5 mb-3.5">
+                    <span class="rounded-pill px-2.5 py-1 text-white fw-bold" id="portal-provider-badge" style="background: #60bb46; font-size: 0.72rem;">eSewa</span>
+                    <span class="text-muted small">Simulated API connection ready.</span>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="wallet-id" class="form-label text-muted small fw-semibold">Wallet ID (Mobile Number)</label>
+                    <input type="text" class="form-control" id="wallet-id" placeholder="e.g. 98XXXXXXXX" style="border-radius:12px; background:var(--es-input-bg); border-color:var(--es-border-strong); font-size:0.9rem;">
+                </div>
+                <div class="mb-2">
+                    <label for="wallet-pin" class="form-label text-muted small fw-semibold">MPIN / Password</label>
+                    <input type="password" class="form-control" id="wallet-pin" placeholder="••••" maxlength="6" style="border-radius:12px; background:var(--es-input-bg); border-color:var(--es-border-strong); font-size:0.9rem;">
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button class="btn btn-outline-light w-50 py-2.5" onclick="goToStep(1)" style="border-radius: 20px;">Back</button>
+                <button class="btn btn-warning w-50 py-2.5 text-dark fw-bold" onclick="startSimulatedProcessing()" style="border-radius: 20px;">Pay ₹{{ tier.price|floatformat:0 }}</button>
+            </div>
+        </div>
+
+        <!-- Step 3: Loading / Encryption Connecting Spinner Panel -->
+        <div class="checkout-step-panel p-5 text-center d-none" id="step-panel-3">
+            <div class="py-5">
+                <div class="spinner-border text-warning mb-4" style="width: 3.5rem; height: 3.5rem; border-width: 0.28em;" role="status"></div>
+                <h5 class="fw-bold text-white mb-2" id="processing-title">Connecting to Gateway...</h5>
+                <p class="text-muted small mx-auto" id="processing-desc" style="max-width: 380px;">Establishing secure, encrypted connection to simulated server. Please do not close or refresh this browser tab.</p>
+            </div>
+        </div>
+
+        <!-- Step 4: OTP Input Verification Panel -->
+        <div class="checkout-step-panel p-4 px-sm-5 d-none" id="step-panel-4">
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3" style="width: 54px; height: 54px; background: rgba(245,158,11,0.15); color: #fbbf24;">
+                    <i class="bi bi-shield-lock-fill fs-3"></i>
+                </div>
+                <h5 class="fw-bold text-white mb-2">Simulated SMS Verification</h5>
+                <p class="text-muted small mx-auto" style="max-width: 380px;">We have simulated sending a 6-digit transaction authorization OTP code to your phone. Use testing code <strong class="text-warning">123456</strong>.</p>
+            </div>
+
+            <div class="p-4 rounded-4 mb-4 border" style="background: rgba(255,255,255,0.02); border-color: var(--es-border)!important;">
+                <div class="mb-3 text-center">
+                    <label for="otp-code" class="form-label text-muted small fw-semibold d-block mb-3.5">Enter 6-Digit OTP</label>
+                    <input type="text" class="form-control text-center fw-bold fs-4 tracking-widest mx-auto" id="otp-code" maxlength="6" placeholder="------" style="max-width: 220px; border-radius:14px; background:var(--es-input-bg); border-color:var(--es-border-strong); color: #fbbf24; letter-spacing: 0.4em;">
+                </div>
+            </div>
+
+            <button class="btn btn-warning w-100 py-2.5 text-dark fw-bold mb-2.5" onclick="verifyAndConfirmBooking({{ tier.id }})" id="otp-verify-btn" style="border-radius: 20px;">
+                Verify & Book Ticket
+            </button>
+            <button class="btn btn-link text-muted w-100 text-decoration-none small" onclick="resendSimulatedOTP()" style="box-shadow:none;">Resend OTP Code</button>
+        </div>
+
+        <!-- Step 5: Final Confirmed Receipt Panel -->
+        <div class="checkout-step-panel p-4 px-sm-5 text-center d-none" id="step-panel-5">
+            <div class="py-4">
+                <!-- Animated Circle check mark -->
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4 animate-scale-up" style="width: 76px; height: 76px; background: rgba(16,185,129,0.15); color: #10b981;">
+                    <i class="bi bi-check-circle-fill" style="font-size: 3.5rem;"></i>
+                </div>
+                
+                <h4 class="fw-bold text-white mb-2">Registration Confirmed!</h4>
+                <p class="text-muted small mb-4.5">Your payment was simulated successfully and your booking is complete!</p>
+
+                <!-- Receipt Ticket card -->
+                <div class="card p-4 text-start mb-4 border" style="background: rgba(255,255,255,0.01); border-color: var(--es-border)!important; border-radius: 16px;">
+                    <div class="d-flex justify-content-between mb-2.5">
+                        <span class="text-muted small">Event Name</span>
+                        <strong class="text-white small">{{ event.title }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2.5">
+                        <span class="text-muted small">Ticket Tier</span>
+                        <span class="text-white-50 small">{{ tier.name }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2.5">
+                        <span class="text-muted small">Ticket ID</span>
+                        <strong class="text-warning small" id="receipt-ticket-id">ES-XXXXXX</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted small">Status</span>
+                        <span class="badge bg-success text-white px-2 py-1" style="font-size: 0.65rem;">CONFIRMED</span>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-3">
+                    <a href="{% url 'profile' %}" class="btn btn-warning w-50 py-2.5 text-dark fw-bold" style="border-radius: 20px;">
+                        <i class="bi bi-person-badge me-1.5"></i>Go to Profile
+                    </a>
+                    <a href="" class="btn btn-outline-light w-50 py-2.5" id="receipt-ticket-link" style="border-radius: 20px;">
+                        <i class="bi bi-qr-code me-1.5"></i>View Ticket
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<style>
+.step-indicator {
+    color: var(--es-text-muted);
+    transition: color 0.3s;
+}
+.step-indicator.active {
+    color: var(--es-accent-pink);
+    text-shadow: 0 0 10px rgba(236,72,153,0.3);
+}
+.payment-method-card {
+    border-color: var(--es-border)!important;
+}
+.payment-method-card:hover {
+    background: rgba(255,255,255,0.03)!important;
+    transform: translateY(-2px);
+}
+.payment-method-card.active {
+    background: rgba(99, 102, 241, 0.05)!important;
+    border-color: var(--es-primary)!important;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.15);
+}
+.cursor-pointer {
+    cursor: pointer;
+}
+.tracking-widest {
+    letter-spacing: 0.15em;
+}
+.animate-fade-in {
+    animation: fadeIn 0.35s ease-out;
+}
+.animate-scale-up {
+    animation: scaleUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+@keyframes scaleUp {
+    from { transform: scale(0.85); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    let selectedMethod = 'esewa';
+
+    function goToStep(stepNum) {
+        // Update Indicator style
+        for (let i = 1; i <= 4; i++) {
+            const ind = document.getElementById('step-ind-' + i);
+            if (ind) {
+                if (i <= stepNum) {
+                    ind.classList.add('active');
+                } else {
+                    ind.classList.remove('active');
+                }
+            }
+        }
+
+        // Show panel
+        for (let i = 1; i <= 5; i++) {
+            const panel = document.getElementById('step-panel-' + i);
+            if (panel) {
+                if (i === stepNum) {
+                    panel.classList.remove('d-none');
+                } else {
+                    panel.classList.add('d-none');
+                }
+            }
+        }
+    }
+
+    function selectPayment(method) {
+        selectedMethod = method;
+        document.querySelectorAll('.payment-method-card').forEach(el => el.classList.remove('active'));
+        document.getElementById('method-' + method).classList.add('active');
+
+        // Update dynamic portal badge/styles
+        const badge = document.getElementById('portal-provider-badge');
+        if (method === 'esewa') {
+            badge.style.background = '#60bb46';
+            badge.textContent = 'eSewa';
+        } else {
+            badge.style.background = '#5c258d';
+            badge.textContent = 'Khalti';
+        }
+    }
+
+    function startSimulatedProcessing() {
+        const walletId = document.getElementById('wallet-id').value.trim();
+        const pin = document.getElementById('wallet-pin').value.trim();
+
+        if (!walletId || !pin) {
+            showGlobalToast('⚠️ Wallet details are required!');
+            return;
+        }
+
+        goToStep(3);
+
+        const titles = [
+            'Connecting to Gateway...',
+            'Verifying wallet ID...',
+            'Securing authorization key...'
+        ];
+        
+        let index = 0;
+        const interval = setInterval(() => {
+            index++;
+            if (index < titles.length) {
+                document.getElementById('processing-title').textContent = titles[index];
+            } else {
+                clearInterval(interval);
+                goToStep(4);
+            }
+        }, 1200);
+    }
+
+    function verifyAndConfirmBooking(tierId) {
+        const otpCode = document.getElementById('otp-code').value.trim();
+        const verifyBtn = document.getElementById('otp-verify-btn');
+        
+        if (!otpCode) {
+            showGlobalToast('⚠️ Please enter the SMS verification OTP code!');
+            return;
+        }
+
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm text-dark me-1.5" role="status"></span>Verifying OTP...';
+
+        // POST transaction request to database confirm view
+        fetch('/events/ajax/checkout/confirm/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                tier_id: tierId
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify & Book Ticket';
+            
+            if (data.status === 'success') {
+                document.getElementById('receipt-ticket-id').textContent = data.ticket_id;
+                document.getElementById('receipt-ticket-link').href = '/events/ticket/' + data.ticket_id + '/';
+                showGlobalToast('🎟️ Payment approved and Ticket Booked!');
+                goToStep(5);
+            } else {
+                showGlobalToast(data.message || 'Verification failed. Try again.');
+                goToStep(2);
+            }
+        })
+        .catch(err => {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = 'Verify & Book Ticket';
+            console.error('Simulated payment error:', err);
+            showGlobalToast('Transaction timed out. Please try again.');
+            goToStep(2);
+        });
+    }
+
+    function resendSimulatedOTP() {
+        showGlobalToast('✉️ Simulated OTP code resent successfully!');
+    }
+</script>
+{% endblock %}

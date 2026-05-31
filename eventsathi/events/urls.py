@@ -11,6 +11,13 @@ urlpatterns = [
     path('<slug:slug>/sponsors/', views.event_sponsors, name='event_sponsors'),
     path('<slug:slug>/announcements/', views.event_announcements, name='event_announcements'),
     path('<slug:slug>/manage/', views.event_manage, name='event_manage'),
+    path('<slug:slug>/manage/edit/', views.event_edit, name='event_edit'),
+    path('<slug:slug>/manage/delete/', views.event_delete, name='event_delete'),
+    path('<slug:slug>/manage/duplicate/', views.event_duplicate, name='event_duplicate'),
+    path('<slug:slug>/manage/status/', views.event_status_change, name='event_status_change'),
+    path('<slug:slug>/manage/attendees/', views.manage_attendees, name='manage_attendees'),
+    path('<slug:slug>/manage/attendees/export/', views.export_attendees, name='export_attendees'),
+    path('<slug:slug>/manage/comments/', views.manage_comments, name='manage_comments'),
     path('<slug:slug>/manage/tickets/', views.manage_tickets, name='manage_tickets'),
     path('<slug:slug>/manage/speakers/', views.manage_speakers, name='manage_speakers'),
     path('<slug:slug>/manage/sessions/', views.manage_sessions, name='manage_sessions'),
@@ -24,4 +31,18 @@ urlpatterns = [
     path('ticket/<str:ticket_id>/', views.view_ticket, name='view_ticket'),
     path('my/tickets/', views.my_tickets, name='my_tickets'),
     path('my/events/', views.my_events, name='my_events'),
+
+    # AJAX Social Endpoints (session-auth for web templates)
+    path('ajax/<int:event_id>/comments/', views.ajax_event_comments, name='ajax_event_comments'),
+    path('ajax/<int:event_id>/comment/post/', views.ajax_post_comment, name='ajax_post_comment'),
+    path('ajax/<int:event_id>/like/', views.ajax_toggle_like, name='ajax_toggle_like'),
+    path('ajax/<int:event_id>/save/', views.ajax_toggle_save, name='ajax_toggle_save'),
+    path('ajax/<int:event_id>/interest/', views.ajax_toggle_interest, name='ajax_toggle_interest'),
+    path('ajax/organizer/<int:organizer_id>/follow/', views.ajax_toggle_follow, name='ajax_toggle_follow'),
+    path('ajax/events/<int:event_id>/pin/', views.ajax_toggle_pin, name='ajax_toggle_pin'),
+    path('ajax/messages/send/', views.ajax_send_message, name='ajax_send_message'),
+    path('ajax/messages/<int:user_id>/', views.ajax_get_messages, name='ajax_get_messages'),
+    path('<slug:slug>/checkout/', views.event_checkout, name='event_checkout'),
+    path('ajax/checkout/confirm/', views.ajax_confirm_checkout, name='ajax_confirm_checkout'),
 ]
+

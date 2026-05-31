@@ -20,7 +20,7 @@
         <div class="row align-items-start">
             <div class="col-lg-8">
                 <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="badge badge-category">{{ event.get_category_display }}</span>
+                    <span class="badge badge-category">{{ event.category.name|default:"Event" }}</span>
                     <span class="badge badge-status-{{ event.status }}">{{ event.get_status_display }}</span>
                     {% if event.is_virtual %}<span class="badge" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);"><i class="bi bi-camera-video me-1"></i>Virtual/Hybrid</span>{% endif %}
                     {% if event.is_featured %}<span class="badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);"><i class="bi bi-star-fill me-1"></i>Featured</span>{% endif %}
@@ -126,6 +126,86 @@
             </div>
             {% endif %}
 
+            <!-- Social Interaction Bar -->
+            <div class="card p-3 mb-5 d-flex flex-row justify-content-between align-items-center" style="background: var(--es-card-bg); border: 1px solid var(--es-border); border-radius: var(--es-radius);">
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted" onclick="likeEvent({{ event.id }})" id="like-btn-{{ event.id }}" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600; transition: all 0.15s;">
+                        <i class="bi {% if user.is_authenticated and event.likes.all %}bi-hand-thumbs-up-fill text-warning{% else %}bi-hand-thumbs-up{% endif %} fs-5" id="like-icon-{{ event.id }}"></i>
+                        <span id="like-text-{{ event.id }}" class="{% if user.is_authenticated and event.likes.all %}text-warning{% endif %}">Like</span>
+                        <span class="badge bg-secondary rounded-pill" id="like-count-{{ event.id }}">{{ event.likes.count }}</span>
+                    </button>
+
+                    <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted" onclick="document.getElementById('comment-input-{{ event.id }}').focus()" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600;">
+                        <i class="bi bi-chat-text fs-5"></i>
+                        <span>Comment</span>
+                        <span class="badge bg-secondary rounded-pill" id="comment-count-{{ event.id }}">{{ event.comments.count }}</span>
+                    </button>
+                </div>
+
+                <div class="d-flex align-items-center gap-3">
+                    <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted" onclick="toggleSaveEvent(null, {{ event.id }})" id="save-btn-{{ event.id }}" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600;">
+                        <i class="bi {% if user.is_authenticated and event.saved_by.all %}bi-bookmark-fill text-primary{% else %}bi-bookmark{% endif %} fs-5" id="save-icon-btn-{{ event.id }}"></i>
+                        <span id="save-btn-text-{{ event.id }}" class="{% if user.is_authenticated and event.saved_by.all %}text-primary{% endif %}">Save</span>
+                    </button>
+
+                    <div class="dropdown">
+                        <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600;">
+                            <i class="bi bi-star fs-5"></i>
+                            <span>Interest</span>
+                            <span class="badge bg-secondary rounded-pill" id="interest-count-{{ event.id }}">{{ event.interests.count }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; background: var(--es-dd-bg);">
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="#" onclick="setEventInterest(event, {{ event.id }}, 'interested')">
+                                    <i class="bi bi-star-fill text-warning"></i>
+                                    <span>Interested</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="#" onclick="setEventInterest(event, {{ event.id }}, 'not_interested')">
+                                    <i class="bi bi-x-circle text-danger"></i>
+                                    <span>Not Interested</span>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Scrollable Comments Section -->
+            <div class="card p-4 mb-5 border" style="background: var(--es-card-bg); border-color: var(--es-border)!important; border-radius: var(--es-radius);">
+                <h4 class="fw-bold mb-4 text-white">Event Discussion</h4>
+
+                {% if user.is_authenticated %}
+                <div class="d-flex gap-3 mb-4">
+                    <div class="avatar-sm d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px; font-size: 1rem; border-radius: 50%; background: linear-gradient(135deg, var(--es-primary), var(--es-secondary)); color: #fff;">
+                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    </div>
+                    <div class="flex-grow-1 position-relative">
+                        <textarea class="form-control comment-input pr-5 py-2.5 px-3" id="comment-input-{{ event.id }}" rows="2" placeholder="Write a public comment..." style="border-radius: 16px; resize: none; font-size: 0.9rem; background: var(--es-input-bg); border-color: var(--es-border-strong);"></textarea>
+                        <button class="btn btn-warning btn-sm mt-2 px-3 fw-semibold" onclick="postComment({{ event.id }})" style="border-radius: 20px;">
+                            <i class="bi bi-send-fill me-1"></i>Post Comment
+                        </button>
+                    </div>
+                </div>
+                {% else %}
+                <div class="text-center p-3 mb-4 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px dashed var(--es-border);">
+                    <small class="text-muted">Please <a href="{% url 'login' %}?next={{ request.path }}" class="text-warning text-decoration-none">login</a> to participate in the event discussion.</small>
+                </div>
+                {% endif %}
+
+                <!-- Comments List -->
+                <div class="comments-list d-flex flex-column gap-3" id="comments-list-{{ event.id }}">
+                    <div class="text-center text-muted py-4 loading-indicator" id="comments-loading-{{ event.id }}">
+                        <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
+                        <span class="ms-2 small">Loading discussion...</span>
+                    </div>
+                    <div class="comments-container d-flex flex-column gap-3" id="comments-container-{{ event.id }}">
+                        <!-- Dynamic Comment nodes are injected here -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Announcements -->
             {% if announcements %}
             <div class="mb-5">
@@ -198,18 +278,40 @@
         <!-- Sidebar -->
         <div class="col-lg-4">
             <!-- Organizer -->
-            <div class="card p-4 mb-4">
-                <h6 class="fw-bold mb-3">Organized by</h6>
+            <a href="{% url 'organizer_profile' event.organizer.username %}" class="card p-4 mb-4 text-decoration-none organizer-link-card border" style="background: var(--es-card-bg); border-color: var(--es-border)!important; border-radius: var(--es-radius); transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;">
+                <h6 class="fw-bold mb-3 text-muted" style="font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.05em;">Organized by</h6>
                 <div class="d-flex align-items-center gap-3">
+                    {% if event.organizer.profile.photo %}
+                    <img src="{{ event.organizer.profile.photo.url }}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;" alt="">
+                    {% else %}
                     <div class="avatar-sm" style="width:44px;height:44px;font-size:1rem;">
                         {{ event.organizer.first_name|first|upper }}{{ event.organizer.last_name|first|upper }}
                     </div>
+                    {% endif %}
                     <div>
-                        <div class="fw-semibold">{{ event.organizer.get_full_name|default:event.organizer.username }}</div>
+                        <div class="fw-semibold text-white d-inline-flex align-items-center gap-1">
+                            {{ event.organizer.get_full_name|default:event.organizer.username }}
+                            {% if event.organizer.profile.is_verified %}
+                            <i class="bi bi-patch-check-fill text-success" title="Verified Organizer"></i>
+                            {% endif %}
+                        </div>
+                        {% if event.organizer.profile.organization %}
+                        <small class="text-muted">{{ event.organizer.profile.designation|default:"Organizer" }} at {{ event.organizer.profile.organization }}</small>
+                        {% else %}
                         <small class="text-muted">Event Organizer</small>
+                        {% endif %}
                     </div>
                 </div>
-            </div>
+            </a>
+
+            <style>
+            .organizer-link-card:hover {
+                transform: translateY(-2px);
+                border-color: var(--es-primary) !important;
+                box-shadow: var(--es-shadow-hover);
+            }
+            </style>
+
 
             <!-- Sponsors -->
             {% if sponsors %}
@@ -234,4 +336,12 @@
         </div>
     </div>
 </div>
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        loadComments({{ event.id }});
+    });
+</script>
+{% endblock %}
 {% endblock %}

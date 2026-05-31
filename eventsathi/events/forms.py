@@ -1,3 +1,4 @@
+from datetime import timedelta
 from django import forms
 from django.utils.text import slugify
 from django.utils import timezone
@@ -48,7 +49,7 @@ class EventForm(forms.ModelForm):
         reg_start = cleaned_data.get('registration_start')
         reg_end = cleaned_data.get('registration_end')
 
-        if start_date and start_date < now:
+        if start_date and start_date < now - timedelta(minutes=5):
             self.add_error('start_date', 'Start date cannot be in the past. Please choose a future date.')
         if end_date:
             if end_date < now:

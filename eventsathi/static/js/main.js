@@ -2,7 +2,7 @@
 
 // ── Theme Toggle ────────────────────────────────────────────
 (function () {
-    var saved = localStorage.getItem('es-theme') || 'dark';
+    var saved = localStorage.getItem('es-theme') || 'light';
     document.documentElement.setAttribute('data-theme', saved);
 })();
 
@@ -17,7 +17,7 @@ function updateThemeIcon(theme) {
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-    var current = document.documentElement.getAttribute('data-theme') || 'dark';
+    var current = document.documentElement.getAttribute('data-theme') || 'light';
     updateThemeIcon(current);
 
     var btn = document.getElementById('themeToggle');

@@ -350,7 +350,7 @@ body {
 [data-theme="dark"] .form-control::placeholder,
 [data-theme="dark"] textarea::placeholder,
 [data-theme="dark"] input::placeholder {
-    color: #808080 !important;
+    color: #a8a8a8 !important;
     opacity: 1 !important;
 }
 

@@ -2,58 +2,230 @@
 {% block title %}Chat with {{ other_user.get_full_name|default:other_user.username }}{% endblock %}
 
 {% block content %}
-<div class="container py-4" style="max-width:720px;">
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <a href="{% url 'messages_list' %}" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i></a>
-        <div class="speaker-avatar" style="width:44px;height:44px;font-size:1rem;">
-            {{ other_user.first_name|first|upper }}{{ other_user.last_name|first|upper }}
-        </div>
-        <div>
-            <div class="fw-bold">{{ other_user.get_full_name|default:other_user.username }}</div>
-            {% if other_user.profile.designation %}<small class="text-muted">{{ other_user.profile.designation }}</small>{% endif %}
-        </div>
-    </div>
-
-    <div class="card mb-3">
-        <div class="messages-container" id="messagesContainer">
-            {% if messages %}
-            {% for msg in messages %}
-            <div class="d-flex {% if msg.sender == request.user %}justify-content-end{% endif %}">
-                <div class="message-bubble {% if msg.sender == request.user %}message-mine{% else %}message-other{% endif %}">
-                    {{ msg.content }}
-                    <div class="text-end mt-1" style="opacity:0.6;font-size:0.7rem;">{{ msg.created_at|date:"g:i A" }}</div>
+<div class="container py-5" style="max-width: 800px;">
+    
+    <!-- Header Block with back arrow, other user details -->
+    <div class="d-flex align-items-center justify-content-between mb-4 pb-3 border-bottom animate-fade-in" style="border-color: var(--es-border)!important;">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'messages_list' %}" class="btn btn-outline-secondary btn-sm rounded-circle d-flex align-items-center justify-content-center" style="width:38px; height:38px;" title="Back to Inbox">
+                <i class="bi bi-arrow-left fs-5"></i>
+            </a>
+            
+            <div class="avatar-container position-relative">
+                {% if other_user.profile.photo %}
+                <img src="{{ other_user.profile.photo.url }}" class="rounded-circle border" style="width:48px; height:48px; object-fit:cover; border-color:var(--es-border)!important;" alt="">
+                {% else %}
+                <div class="avatar-sm d-flex align-items-center justify-content-center text-white fw-bold" style="width:48px; height:48px; border-radius:50%; background:linear-gradient(135deg, var(--es-primary), var(--es-secondary)); font-size:1.1rem;">
+                    {{ other_user.first_name|first|upper }}{{ other_user.last_name|first|upper }}
                 </div>
+                {% endif %}
+                <span class="position-absolute bottom-0 end-0 bg-success border border-light rounded-circle" style="width:11px; height:11px;" title="Online Status"></span>
             </div>
-            {% endfor %}
-            {% else %}
-            <div class="text-center text-muted py-3 small">Start the conversation!</div>
-            {% endif %}
+
+            <div>
+                <div class="fw-bold text-white fs-5 d-flex align-items-center gap-1.5">
+                    {{ other_user.get_full_name|default:other_user.username }}
+                    {% if other_user.profile.is_verified %}
+                    <i class="bi bi-patch-check-fill text-success fs-6" title="Verified Member"></i>
+                    {% endif %}
+                </div>
+                {% if other_user.profile.organization %}
+                <small class="text-muted">{{ other_user.profile.designation|default:"Member" }} at <strong class="text-white-50">{{ other_user.profile.organization }}</strong></small>
+                {% else %}
+                <small class="text-muted">EventSathi User</small>
+                {% endif %}
+            </div>
         </div>
-        <div class="p-3 border-top" style="border-color:var(--es-border) !important;">
-            <form method="post" class="d-flex gap-2 align-items-end">
-                {% csrf_token %}
-                {{ form.content }}
-                <button type="submit" class="btn btn-primary px-3 flex-shrink-0">
-                    <i class="bi bi-send"></i>
-                </button>
-            </form>
+
+        <div class="d-none d-sm-block">
+            <a href="{% url 'network_hub' %}" class="btn btn-outline-primary btn-sm px-3.5" style="border-radius:20px;">
+                <i class="bi bi-people me-1"></i>Network Hub
+            </a>
         </div>
     </div>
 
-    <div class="text-center">
-        <a href="{% url 'network_hub' %}" class="text-muted text-decoration-none small">
-            <i class="bi bi-people me-1"></i>Back to Network Hub
-        </a>
+    <!-- Premium Glassmorphism Chat Wrapper Box -->
+    <div class="card border shadow-lg overflow-hidden mb-3 animate-fade-in" style="background: var(--es-card-bg); border-color: var(--es-border)!important; border-radius: var(--es-radius);">
+        
+        <!-- Live Chat Messages Container Scrollbox -->
+        <div class="messages-container px-4 py-4 d-flex flex-column gap-3.5" id="messagesContainer" style="height: 440px; overflow-y: auto; scroll-behavior: smooth;">
+            <!-- Message nodes will be loaded here dynamically by AJAX -->
+            <div class="text-center text-muted py-5" id="chat-loading-placeholder">
+                <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
+                <span class="ms-2 small">Syncing secure messages...</span>
+            </div>
+        </div>
+
+        <!-- Chat Input Form & Actions footer -->
+        <div class="p-3 border-top" style="background: rgba(255,255,255,0.01); border-color: var(--es-border)!important;">
+            <div class="d-flex gap-2.5">
+                <textarea class="form-control comment-input py-2.5 px-3 flex-grow-1" id="chat-message-input" rows="1" placeholder="Write a secure direct message..." style="border-radius: 20px; resize: none; font-size: 0.9rem; background: var(--es-input-bg); border-color: var(--es-border-strong);"></textarea>
+                <button class="btn btn-warning px-4 flex-shrink-0 d-flex align-items-center justify-content-center" id="chat-send-btn" onclick="sendDirectChatMessage({{ other_user.id }})" style="border-radius: 20px; font-weight: 700; color: #1e1b4b;">
+                    <i class="bi bi-send-fill"></i>
+                </button>
+            </div>
+        </div>
+
     </div>
+
+    <div class="text-center text-muted small mt-2">
+        <i class="bi bi-shield-fill-check text-success me-1"></i>End-to-End synced messaging via EventSathi Live Core.
+    </div>
+
 </div>
 
-<script>
-// Auto scroll to bottom
-const container = document.getElementById('messagesContainer');
-if (container) container.scrollTop = container.scrollHeight;
-</script>
-
 <style>
-#id_content { width:100%; border-radius:12px; resize:none; }
+.messages-container::-webkit-scrollbar {
+    width: 6px;
+}
+.messages-container::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 3px;
+}
+.message-bubble-row {
+    display: flex;
+    width: 100%;
+}
+.message-bubble-row.mine {
+    justify-content: flex-end;
+}
+.message-bubble {
+    max-width: 75%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 0.9rem;
+    line-height: 1.45;
+    word-break: break-word;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+}
+.message-bubble-row.mine .message-bubble {
+    background: linear-gradient(135deg, var(--es-primary), var(--es-secondary));
+    color: #ffffff;
+    border-bottom-right-radius: 4px;
+}
+.message-bubble-row.other .message-bubble {
+    background: rgba(255, 255, 255, 0.04);
+    color: #e2e8f0;
+    border: 1px solid var(--es-border);
+    border-bottom-left-radius: 4px;
+}
+.message-time {
+    font-size: 0.68rem;
+    opacity: 0.65;
+    margin-top: 4px;
+}
+.message-bubble-row.mine .message-time {
+    text-align: right;
+}
+.message-bubble-row.other .message-time {
+    text-align: left;
+}
+.animate-fade-in {
+    animation: fadeIn 0.35s ease-out;
+}
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const otherUserId = {{ other_user.id }};
+    const container = document.getElementById('messagesContainer');
+    const input = document.getElementById('chat-message-input');
+    let lastMessageCount = 0;
+
+    // Load conversation message list
+    function loadChatMessages(isFirstLoad = false) {
+        fetch(`/events/ajax/messages/${otherUserId}/`)
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                const messages = data.messages || [];
+                
+                // Only render if count changed
+                if (messages.length !== lastMessageCount || isFirstLoad) {
+                    const placeholder = document.getElementById('chat-loading-placeholder');
+                    if (placeholder) placeholder.remove();
+                    
+                    container.innerHTML = '';
+                    if (messages.length === 0) {
+                        container.innerHTML = '<div class="text-center text-muted py-5 small">No messages yet. Say hello and start the conversation!</div>';
+                        return;
+                    }
+
+                    messages.forEach(m => {
+                        const rowClass = m.is_mine ? 'mine' : 'other';
+                        const bubbleHtml = `
+                            <div class="message-bubble-row ${rowClass}">
+                                <div class="message-bubble">
+                                    <div class="message-text">${m.content}</div>
+                                    <div class="message-time">${m.time}</div>
+                                </div>
+                            </div>
+                        `;
+                        container.insertAdjacentHTML('beforeend', bubbleHtml);
+                    });
+
+                    // Scroll to bottom
+                    container.scrollTop = container.scrollHeight;
+                    lastMessageCount = messages.length;
+                }
+            }
+        })
+        .catch(err => console.error('Chat load error:', err));
+    }
+
+    // Send a new message
+    function sendDirectChatMessage(receiverId) {
+        const content = input.value.trim();
+        if (!content) return;
+
+        input.disabled = true;
+        input.value = '';
+
+        fetch('/events/ajax/messages/send/', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                receiver_id: receiverId,
+                content: content
+            })
+        })
+        .then(res => res.json())
+        .then(data => {
+            input.disabled = false;
+            input.focus();
+            if (data.status === 'success') {
+                loadChatMessages();
+            } else {
+                showGlobalToast(data.message || 'Failed to send message.');
+            }
+        })
+        .catch(err => {
+            input.disabled = false;
+            console.error('Chat send error:', err);
+        });
+    }
+
+    // Submit on Enter key press
+    input.addEventListener('keydown', function(event) {
+        if (event.key === 'Enter' && !event.shiftKey) {
+            event.preventDefault();
+            sendDirectChatMessage(otherUserId);
+        }
+    });
+
+    // Start poll loop
+    document.addEventListener('DOMContentLoaded', () => {
+        loadChatMessages(true);
+        // Poll every 3 seconds for real-time synchronization
+        setInterval(() => loadChatMessages(false), 3000);
+    });
+</script>
 {% endblock %}

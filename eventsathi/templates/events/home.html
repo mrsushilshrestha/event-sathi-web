@@ -3,78 +3,6 @@
 
 {% block content %}
 
-<!-- ── EVENTS FIRST ──────────────────────────────────────────── -->
-{% if has_events %}
-<section class="py-5">
-    <div class="container">
-
-        <!-- LIVE NOW -->
-        {% if live_events %}
-        <div class="mb-5">
-            <div class="d-flex justify-content-between align-items-end mb-4">
-                <div>
-                    <span class="badge mb-2 px-3 py-2" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.35);font-size:0.75rem;letter-spacing:.05em;">
-                        <span class="d-inline-block rounded-circle bg-danger me-1" style="width:7px;height:7px;animation:pulse 1.2s infinite;"></span>
-                        LIVE NOW
-                    </span>
-                    <h2 class="section-title mb-0">Happening Right Now</h2>
-                </div>
-                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
-            </div>
-            <div class="row gy-4">
-                {% for event in live_events %}
-                <div class="col-lg-3 col-md-6">
-                    {% include 'events/_event_card.html' with event=event status_label='live' %}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- UPCOMING -->
-        {% if upcoming_events %}
-        <div class="mb-5">
-            <div class="d-flex justify-content-between align-items-end mb-4">
-                <div>
-                    <span class="badge mb-2 px-3 py-2" style="background:rgba(108,61,225,0.15);color:#a78bfa;border:1px solid rgba(108,61,225,0.35);font-size:0.75rem;letter-spacing:.05em;">UPCOMING</span>
-                    <h2 class="section-title mb-0">Don't Miss These</h2>
-                </div>
-                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
-            </div>
-            <div class="row gy-4">
-                {% for event in upcoming_events %}
-                <div class="col-lg-3 col-md-6">
-                    {% include 'events/_event_card.html' with event=event status_label='upcoming' %}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-        <!-- PAST -->
-        {% if past_events %}
-        <div>
-            <div class="d-flex justify-content-between align-items-end mb-4">
-                <div>
-                    <span class="badge mb-2 px-3 py-2" style="background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.35);font-size:0.75rem;letter-spacing:.05em;">PAST</span>
-                    <h2 class="section-title mb-0">Recently Concluded</h2>
-                </div>
-                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
-            </div>
-            <div class="row gy-4">
-                {% for event in past_events %}
-                <div class="col-lg-3 col-md-6">
-                    {% include 'events/_event_card.html' with event=event status_label='past' %}
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-        {% endif %}
-
-    </div>
-</section>
-{% endif %}
-
 <!-- ── HERO ──────────────────────────────────────────────────── -->
 <section class="hero-section">
     <div class="container position-relative" style="z-index:1;">
@@ -98,63 +26,108 @@
                         Get Started Free
                     </a>
                     {% else %}
-                    {% with profile=user.profile %}
-                    {% if profile.role == 'organizer' or user.is_staff %}
-                    <a href="{% url 'event_create' %}" class="btn btn-warning btn-lg px-5 py-3">
-                        <i class="bi bi-plus-circle me-2"></i>Post Event
+                    <a href="{% url 'event_create' %}" class="btn btn-outline-light btn-lg px-5 py-3">
+                        <i class="bi bi-plus-circle me-2"></i>Post New Event
                     </a>
                     {% endif %}
-                    {% endwith %}
-                    {% endif %}
-                </div>
-                <div class="d-flex gap-5 mt-5">
-                    <div>
-                        <div class="stat-number fs-2 fw-bold text-white stat-counter" data-target="{{ total_events }}">0</div>
-                        <div class="stat-label">Events Hosted</div>
-                    </div>
-                    <div>
-                        <div class="stat-number fs-2 fw-bold text-white stat-counter" data-target="{{ total_registrations }}">0</div>
-                        <div class="stat-label">Registrations</div>
-                    </div>
-                    <div>
-                        <div class="stat-number fs-2 fw-bold text-white">100%</div>
-                        <div class="stat-label">Paperless</div>
-                    </div>
                 </div>
             </div>
-            <div class="col-lg-5 d-none d-lg-block">
-                <div class="position-relative">
-                    <div class="card p-4 shadow-lg" style="border-radius:20px; transform: rotate(-2deg);">
-                        <div class="d-flex align-items-center gap-3 mb-3">
-                            <div style="width:48px;height:48px;background:linear-gradient(135deg,#6c3de1,#f59e0b);border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                                <i class="bi bi-calendar-event text-white fs-5"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold">Tech Summit 2024</div>
-                                <small class="text-muted">800 attendees registered</small>
-                            </div>
-                        </div>
-                        <div class="progress mb-2" style="height:6px;">
-                            <div class="progress-bar" style="width:80%"></div>
-                        </div>
-                        <small class="text-muted">80% capacity filled</small>
-                        <div class="d-flex gap-2 mt-3">
-                            <span class="badge badge-category"><i class="bi bi-camera-video me-1"></i>Live Stream</span>
-                            <span class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);">Open</span>
-                        </div>
-                    </div>
-                    <div class="card p-3 shadow" style="position:absolute;bottom:-30px;right:-20px;border-radius:16px;min-width:180px;">
-                        <div class="d-flex align-items-center gap-2">
-                            <div class="rounded-circle bg-success d-flex align-items-center justify-content-center" style="width:36px;height:36px;">
-                                <i class="bi bi-qr-code text-white"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold small">QR Check-In</div>
-                                <small class="text-muted">342 scanned today</small>
-                            </div>
-                        </div>
-                    </div>
+            <div class="col-lg-5">
+                <div class="hero-image-wrapper p-3 rounded-4 shadow-lg" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);">
+                    <img src="https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80" class="img-fluid rounded-4 shadow" alt="Event Dashboard">
                 </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ── EVENTS ──────────────────────────────────────────── -->
+{% if has_events %}
+<section class="py-5">
+    <div class="container">
+
+        <!-- LIVE NOW -->
+        {% if live_events %}
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <span class="badge mb-2 px-3 py-2" style="background:rgba(239,68,68,0.15);color:#f87171;border:1px solid rgba(239,68,68,0.35);font-size:0.75rem;letter-spacing:.05em;">
+                        <span class="d-inline-block rounded-circle bg-danger me-1" style="width:7px;height:7px;animation:pulse 1.2s infinite;"></span>
+                        LIVE NOW
+                    </span>
+                    <h2 class="section-title mb-0">Happening Right Now</h2>
+                </div>
+                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            <div class="row gy-5 gx-4">
+                {% for event in live_events %}
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                        {% include 'events/_event_card.html' with event=event status_label='live' %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- UPCOMING -->
+        {% if upcoming_events %}
+        <div class="mb-5">
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <span class="badge mb-2 px-3 py-2" style="background:rgba(108,61,225,0.15);color:#a78bfa;border:1px solid rgba(108,61,225,0.35);font-size:0.75rem;letter-spacing:.05em;">UPCOMING</span>
+                    <h2 class="section-title mb-0">Don't Miss These</h2>
+                </div>
+                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            <div class="row gy-5 gx-4">
+                {% for event in upcoming_events %}
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                        {% include 'events/_event_card.html' with event=event status_label='upcoming' %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- PAST -->
+        {% if past_events %}
+        <div>
+            <div class="d-flex justify-content-between align-items-end mb-4">
+                <div>
+                    <span class="badge mb-2 px-3 py-2" style="background:rgba(100,116,139,0.15);color:#94a3b8;border:1px solid rgba(100,116,139,0.35);font-size:0.75rem;letter-spacing:.05em;">PAST</span>
+                    <h2 class="section-title mb-0">Recently Concluded</h2>
+                </div>
+                <a href="{% url 'event_list' %}" class="btn btn-outline-primary btn-sm">View All</a>
+            </div>
+            <div class="row gy-5 gx-4">
+                {% for event in past_events %}
+                    <div class="col-lg-4 col-md-6 col-sm-12">
+                        {% include 'events/_event_card.html' with event=event status_label='past' %}
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+    </div>
+</section>
+{% endif %}
+
+<!-- ── STATS SECTION ──────────────────────────────────────────── -->
+<section class="py-5" style="background:var(--es-dark-2);">
+    <div class="container">
+        <div class="row text-center gy-4">
+            <div class="col-md-4">
+                <div class="stat-number fs-1 fw-bold text-white mb-1">{{ total_events|default:"12" }}+</div>
+                <div class="text-muted">Global Events Hosted</div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-number fs-1 fw-bold text-white mb-1">{{ total_registrations|default:"1.2k" }}+</div>
+                <div class="text-muted">Tickets Booked</div>
+            </div>
+            <div class="col-md-4">
+                <div class="stat-number fs-1 fw-bold text-white mb-1">100%</div>
+                <div class="text-muted">Real-Time Sync Ready</div>
             </div>
         </div>
     </div>

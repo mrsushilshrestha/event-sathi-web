@@ -8,3 +8,6 @@ django-crispy-forms==2.6
 crispy-bootstrap5==2026.3
 django-widget-tweaks==1.5.1
 python-decouple==3.8
+djangorestframework==3.15.2
+djangorestframework-simplejwt==5.4.0
+django-cors-headers==4.7.0

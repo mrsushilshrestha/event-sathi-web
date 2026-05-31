@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+{% block title %}Admin Login{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="card p-4 shadow-lg border" style="max-width: 450px; width: 100%; background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; border-radius: 12px; background: rgba(249,115,22,0.1); border: 1px solid rgba(249,115,22,0.25);">
+                <i class="bi bi-shield-lock-fill fs-3" style="color: var(--es-primary);"></i>
+            </div>
+            <h4 class="fw-bold mb-1" style="color: var(--es-text);">Administrative Portal</h4>
+            <p class="text-muted small mb-0">Authorized personnel only</p>
+        </div>
+
+        {% if form.errors %}
+        <div class="alert alert-danger p-3 rounded-3 mb-3 small" role="alert" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #f87171;">
+            <i class="bi bi-exclamation-octagon me-2"></i>
+            {% if form.non_field_errors %}
+                {{ form.non_field_errors.0 }}
+            {% else %}
+                Incorrect credentials or security failure. Please review input.
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <form method="post" novalidate>
+            {% csrf_token %}
+            
+            <div class="mb-3">
+                <label class="form-label small fw-semibold text-muted" for="{{ form.username.id_for_label }}">Email Address</label>
+                {{ form.username }}
+                {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label small fw-semibold text-muted" for="{{ form.password.id_for_label }}">Password</label>
+                <div class="input-group">
+                    {{ form.password }}
+                    <button type="button" class="btn btn-outline-secondary show-pass-btn" tabindex="-1" data-target="id_password">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </div>
+                {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-warning w-100 py-2.5 fw-bold mb-3" style="border-radius: 8px;">
+                <i class="bi bi-box-arrow-in-right me-2"></i>Enter Control Panel
+            </button>
+
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary w-100 py-2.5 small" style="border-radius: 8px;">
+                <i class="bi bi-arrow-left me-2"></i>Return to Public Site
+            </a>
+        </form>
+    </div>
+</div>
+
+<style>
+.form-control {
+    width: 100%;
+    display: block;
+    background: var(--es-input-bg) !important;
+    border: 1px solid var(--es-input-border) !important;
+    color: var(--es-text) !important;
+    padding: .65rem .95rem;
+    transition: all 0.25s ease;
+}
+.input-group .form-control {
+    border-right: none !important;
+    border-radius: 8px 0 0 8px !important;
+}
+.input-group .show-pass-btn {
+    border-left: none !important;
+    background: var(--es-input-bg) !important;
+    border: 1px solid var(--es-input-border) !important;
+    color: var(--es-text-muted) !important;
+    border-radius: 0 8px 8px 0 !important;
+    padding: 0 .95rem;
+    transition: all 0.25s ease;
+}
+.input-group .show-pass-btn:hover {
+    color: var(--es-primary) !important;
+    background: var(--es-input-bg) !important;
+    opacity: 0.9;
+}
+.form-control:focus {
+    border-color: var(--es-primary) !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(249,115,22,.15) !important;
+    background: rgba(249,115,22,0.05) !important;
+}
+.input-group:focus-within .show-pass-btn {
+    border-color: var(--es-primary) !important;
+}
+/* Style webkit autofill to prevent browser defaults from breaking design */
+.form-control:-webkit-autofill,
+.form-control:-webkit-autofill:hover, 
+.form-control:-webkit-autofill:focus {
+    -webkit-text-fill-color: var(--es-text) !important;
+    -webkit-box-shadow: 0 0 0px 1000px var(--es-input-bg) inset !important;
+    transition: background-color 5000s ease-in-out 0s;
+}
+</style>
+
+<script>
+document.querySelectorAll('.show-pass-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const input = document.getElementById(this.getAttribute('data-target'));
+        const icon = this.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    });
+});
+</script>
+{% endblock %}
