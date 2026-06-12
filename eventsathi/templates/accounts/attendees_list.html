@@ -26,7 +26,13 @@
                 </div>
                 {% endif %}
                 <div class="fw-bold mb-1">{{ profile.user.get_full_name|default:profile.user.username }}</div>
-                <span class="badge badge-category mb-2">{{ profile.get_role_display }}</span>
+                <span class="badge badge-category mb-2">
+                    {% if profile.user.is_staff or profile.user.is_superuser %}
+                        Admin
+                    {% else %}
+                        {{ profile.get_role_display }}
+                    {% endif %}
+                </span>
                 {% if profile.designation %}<small class="text-muted d-block">{{ profile.designation }}</small>{% endif %}
                 {% if profile.organization %}<small class="text-muted d-block">{{ profile.organization }}</small>{% endif %}
                 {% if profile.get_interests_list %}

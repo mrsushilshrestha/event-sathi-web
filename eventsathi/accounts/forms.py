@@ -110,6 +110,7 @@ class LoginForm(AuthenticationForm):
         initial='attendee'
     )
 
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for field_name, field in self.fields.items():
@@ -119,19 +120,55 @@ class LoginForm(AuthenticationForm):
                 field.widget.attrs = existing_attrs
 
     def clean(self):
-        cleaned_data = super().clean()
-        user = self.user_cache
-        if user:
-            if not (user.is_superuser or user.is_staff):
-                profile = getattr(user, 'profile', None)
-                if profile:
-                    selected_role = cleaned_data.get('role') or 'attendee'
-                    if profile.role != selected_role:
-                        role_display = "User / Attendee" if selected_role == "attendee" else "Organizer"
-                        raise forms.ValidationError(
-                            f"This account is not registered as a {role_display}."
-                        )
-        return cleaned_data
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+        selected_role = self.cleaned_data.get('role') or 'attendee'
+        role_display = "Attendee" if selected_role == "attendee" else "Organizer"
+
+        if username and password:
+            from django.db.models import Q
+            # Check if user exists in db
+            user = User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).first()
+            if not user:
+                raise forms.ValidationError(
+                    f"No account found with this email. Please sign up as an {role_display}."
+                )
+
+            # Block admin accounts from normal login — must use /adminlogin/
+            if user.is_superuser or user.is_staff:
+                raise forms.ValidationError(
+                    "Admin accounts cannot log in here. Please use the Admin Login page at /adminlogin/."
+                )
+
+            # Check role match for regular users
+            profile = getattr(user, 'profile', None)
+            if profile:
+                if profile.role != selected_role:
+                    other_role = "Attendee" if profile.role == "attendee" else "Organizer"
+                    raise forms.ValidationError(
+                        f"This account is registered as an {other_role}, not an {role_display}. Please select the correct role or sign up."
+                    )
+            else:
+                raise forms.ValidationError(
+                    f"No profile found for this user. Please sign up as an {role_display}."
+                )
+
+            # Check password
+            if not user.check_password(password):
+                raise forms.ValidationError(
+                    "Incorrect password. Please try again."
+                )
+
+            # Check if active
+            if not user.is_active:
+                raise forms.ValidationError(
+                    "This account is inactive. Please verify your email first."
+                )
+
+            self.user_cache = user
+
+        return self.cleaned_data
+
 
 
 
@@ -194,11 +231,25 @@ from django.utils.text import slugify
 
 class AdminLoginForm(LoginForm):
     def clean(self):
-        cleaned_data = super().clean()
-        user = self.user_cache
-        if user and not (user.is_staff or user.is_superuser):
-            raise forms.ValidationError("You do not have administrative privileges.")
-        return cleaned_data
+        # Skip LoginForm.clean() to avoid the "admin blocked" check.
+        # Call the grandparent (AuthenticationForm) directly and do our own validation.
+        username = self.cleaned_data.get('username')
+        password = self.cleaned_data.get('password')
+
+        if username and password:
+            from django.db.models import Q
+            user = User.objects.filter(Q(username__iexact=username) | Q(email__iexact=username)).first()
+            if not user:
+                raise forms.ValidationError("No admin account found with this email.")
+            if not user.check_password(password):
+                raise forms.ValidationError("Incorrect password. Please try again.")
+            if not user.is_active:
+                raise forms.ValidationError("This account is inactive.")
+            if not (user.is_staff or user.is_superuser):
+                raise forms.ValidationError("You do not have administrative privileges.")
+            self.user_cache = user
+
+        return self.cleaned_data
 
 
 class AdminEventForm(forms.ModelForm):
@@ -209,7 +260,7 @@ class AdminEventForm(forms.ModelForm):
             'start_date', 'end_date',
             'registration_start', 'registration_end',
             'venue', 'city',
-            'is_virtual', 'virtual_link', 'max_capacity', 'tags', 'is_featured', 'status',
+            'is_virtual', 'virtual_link', 'max_capacity', 'price', 'tags', 'is_featured', 'status',
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 5, 'placeholder': 'Describe the event…'}),
@@ -222,6 +273,7 @@ class AdminEventForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'placeholder': 'Give the event a catchy title'}),
             'venue': forms.TextInput(attrs={'placeholder': 'Auditorium, Hall, Building name…'}),
             'city': forms.TextInput(attrs={'placeholder': 'Mumbai'}),
+            'price': forms.NumberInput(attrs={'placeholder': 'Leave blank for free event', 'min': 0, 'step': '0.01'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
         }
 
@@ -234,6 +286,7 @@ class AdminEventForm(forms.ModelForm):
         self.fields['is_featured'].required = False
         self.fields['virtual_link'].required = False
         self.fields['banner'].required = False
+        self.fields['price'].required = False
         
         # Apply bootstrap styling class to all form controls except checkboxes
         for field_name, field in self.fields.items():
@@ -248,11 +301,35 @@ class AdminEventForm(forms.ModelForm):
         end_date = cleaned_data.get('end_date')
         reg_start = cleaned_data.get('registration_start')
         reg_end = cleaned_data.get('registration_end')
+        max_capacity = cleaned_data.get('max_capacity')
+        is_virtual = cleaned_data.get('is_virtual', False)
+        virtual_link = cleaned_data.get('virtual_link', '').strip()
+        venue = cleaned_data.get('venue', '').strip()
+        city = cleaned_data.get('city', '').strip()
+
+        if max_capacity is not None and max_capacity <= 0:
+            self.add_error('max_capacity', 'Maximum capacity must be a positive number.')
 
         if end_date and start_date and end_date <= start_date:
             self.add_error('end_date', 'End date must be after the start date.')
         if reg_end and reg_start and reg_end <= reg_start:
             self.add_error('registration_end', 'Registration end must be after registration start.')
+        if reg_end and start_date and reg_end > start_date:
+            self.add_error('registration_end', 'Registration must close before or at the start time of the event.')
+
+        if is_virtual:
+            if not virtual_link:
+                self.add_error('virtual_link', 'Virtual link is required for virtual events.')
+            if not venue:
+                cleaned_data['venue'] = 'Virtual / Online'
+            if not city:
+                cleaned_data['city'] = 'Online'
+        else:
+            if not venue:
+                self.add_error('venue', 'Venue is required for in-person events.')
+            if not city:
+                self.add_error('city', 'City is required for in-person events.')
+
         return cleaned_data
 
     def save(self, commit=True):

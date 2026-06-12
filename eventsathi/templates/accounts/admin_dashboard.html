@@ -9,7 +9,16 @@
                 <h3 class="fw-bold mb-1 text-white"><i class="bi bi-shield-shaded me-2 text-warning"></i>Admin Control Center</h3>
                 <p class="text-muted mb-0 small">Platform-wide event oversight and system administration</p>
             </div>
-            <div>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <a href="{% url 'admin_add_user' %}" class="btn btn-primary fw-semibold px-4">
+                    <i class="bi bi-person-plus-fill me-2"></i>Add New User
+                </a>
+                <a href="{% url 'admin_add_organizer' %}" class="btn btn-success fw-semibold px-4">
+                    <i class="bi bi-person-plus-fill me-2"></i>Add New Organizer
+                </a>
+                <a href="{% url 'admin_add_admin' %}" class="btn btn-warning fw-semibold px-4">
+                    <i class="bi bi-person-plus-fill me-2"></i>Add New Admin
+                </a>
                 <span class="badge px-3 py-2 rounded-pill bg-danger border border-danger-subtle small fw-semibold">
                     <span class="d-inline-block rounded-circle bg-white me-1 text-white" style="width:6px;height:6px;animation:pulse 1.2s infinite;vertical-align:middle;"></span>Live System Monitoring
                 </span>
@@ -20,7 +29,7 @@
 
 <div class="container py-5">
     <!-- Metric Cards -->
-    <div class="row g-4 mb-5">
+    <div class="row g-4 mb-4">
         <div class="col-md-4">
             <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
                 <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(249,115,22,0.1); color: var(--es-primary);">
@@ -56,6 +65,34 @@
         </div>
     </div>
 
+    <!-- Role Breakdown Sub-row -->
+    <div class="row g-3 mb-5 mt-n4 text-center">
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border shadow-sm" style="background: rgba(255,255,255,0.015); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <h5 class="fw-bold mb-0 text-warning">{{ total_organizers }}</h5>
+                <small class="text-muted fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.03em;">ORGANIZERS</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border shadow-sm" style="background: rgba(255,255,255,0.015); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <h5 class="fw-bold mb-0 text-info">{{ total_speakers }}</h5>
+                <small class="text-muted fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.03em;">SPEAKERS</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border shadow-sm" style="background: rgba(255,255,255,0.015); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <h5 class="fw-bold mb-0 text-success">{{ total_attendees }}</h5>
+                <small class="text-muted fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.03em;">ATTENDEES</small>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="card p-3 border shadow-sm" style="background: rgba(255,255,255,0.015); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <h5 class="fw-bold mb-0 text-danger">{{ total_admins }}</h5>
+                <small class="text-muted fw-semibold" style="font-size: 0.72rem; letter-spacing: 0.03em;">ADMINISTRATORS</small>
+            </div>
+        </div>
+    </div>
+
     <!-- Search / Filter Area -->
     <div class="card p-4 border mb-4 shadow-sm" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
         <form method="get" class="row g-3">
@@ -63,7 +100,7 @@
             <div class="col-lg-6">
                 <div class="input-group">
                     <span class="input-group-text border-0" style="background: rgba(255,255,255,0.03); color: var(--es-text-muted);"><i class="bi bi-search"></i></span>
-                    <input type="text" name="q" class="form-control" placeholder="{% if active_tab == 'organizers' %}Search organizers by name, username, email or organization...{% else %}Search events by title, organizer, city or venue...{% endif %}" value="{{ q }}">
+                    <input type="text" name="q" class="form-control" placeholder="{% if active_tab == 'organizers' %}Search organizers by name, username, email or organization...{% elif active_tab == 'users' %}Search all accounts by name, username or email...{% else %}Search events by title, organizer, city or venue...{% endif %}" value="{{ q }}">
                 </div>
             </div>
             {% if active_tab == 'events' %}
@@ -103,6 +140,16 @@
         <li class="nav-item" role="presentation">
             <a href="?tab=organizers{% if q %}&q={{ q }}{% endif %}" class="nav-link {% if active_tab == 'organizers' %}active fw-bold text-warning{% else %}text-muted{% endif %}" style="border-radius: 8px 8px 0 0; background: {% if active_tab == 'organizers' %}var(--es-card-bg){% else %}transparent{% endif %}; border: 1px solid {% if active_tab == 'organizers' %}var(--es-border){% else %}transparent{% endif %}; border-bottom-color: {% if active_tab == 'organizers' %}var(--es-card-bg){% else %}transparent{% endif %}; transition: all 0.2s;">
                 <i class="bi bi-person-lines-fill me-2"></i>Organizers ({{ organizers.count }})
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a href="?tab=users{% if q %}&q={{ q }}{% endif %}" class="nav-link {% if active_tab == 'users' %}active fw-bold text-warning{% else %}text-muted{% endif %}" style="border-radius: 8px 8px 0 0; background: {% if active_tab == 'users' %}var(--es-card-bg){% else %}transparent{% endif %}; border: 1px solid {% if active_tab == 'users' %}var(--es-border){% else %}transparent{% endif %}; border-bottom-color: {% if active_tab == 'users' %}var(--es-card-bg){% else %}transparent{% endif %}; margin-left: 4px; transition: all 0.2s;">
+                <i class="bi bi-people-fill me-2"></i>All Accounts ({{ users.count }})
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a href="?tab=admins" class="nav-link {% if active_tab == 'admins' %}active fw-bold text-warning{% else %}text-muted{% endif %}" style="border-radius: 8px 8px 0 0; background: {% if active_tab == 'admins' %}var(--es-card-bg){% else %}transparent{% endif %}; border: 1px solid {% if active_tab == 'admins' %}var(--es-border){% else %}transparent{% endif %}; border-bottom-color: {% if active_tab == 'admins' %}var(--es-card-bg){% else %}transparent{% endif %}; margin-left: 4px; transition: all 0.2s;">
+                <i class="bi bi-shield-lock me-2"></i>Admins ({{ total_admins }})
             </a>
         </li>
     </ul>
@@ -147,7 +194,7 @@
                                     <a href="{% url 'event_detail' event.slug %}" class="fw-bold text-white text-decoration-none hover-warning" target="_blank" title="View Public Detail Page">
                                         {{ event.title|truncatewords:6 }}
                                     </a>
-                                    <div class="small text-muted mt-0.5">{{ event.category.name|default:"Event" }}</div>
+                                    <div class="small text-muted mt-0.5">{{ event.get_category_display }}</div>
                                 </div>
                             </div>
                         </td>
@@ -231,7 +278,7 @@
             </table>
         </div>
     </div>
-    {% else %}
+    {% elif active_tab == 'organizers' %}
     <!-- Organizers List Panel -->
     <div class="card border shadow-sm mb-5 overflow-hidden" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
         <div class="card-header border-bottom p-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.01); border-color: var(--es-border)!important;">
@@ -313,6 +360,9 @@
                                         {% endif %}
                                     </button>
                                 </form>
+                                <a href="{% url 'admin_reset_user_password' org.user.id %}" class="btn btn-sm btn-outline-info fw-semibold px-2.5" title="Reset Password and Send Temporary Password">
+                                    <i class="bi bi-key me-1"></i> Reset PW
+                                </a>
                                 <a href="{% url 'organizer_profile' org.user.username %}" class="btn btn-outline-primary btn-sm px-2.5" target="_blank" title="Review Profile">
                                     <i class="bi bi-eye"></i> Review
                                 </a>
@@ -331,6 +381,210 @@
                         </td>
                     </tr>
                     {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% elif active_tab == 'users' %}
+    <!-- Users List Panel -->
+    <div class="card border shadow-sm mb-5 overflow-hidden" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <div class="card-header border-bottom p-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.01); border-color: var(--es-border)!important;">
+            <h5 class="fw-bold mb-0 text-white"><i class="bi bi-people me-2 text-muted"></i>All Registered Accounts</h5>
+            <small class="text-muted">{{ users.count }} records found</small>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 custom-admin-table" style="color: var(--es-text);">
+                <thead>
+                    <tr class="text-muted" style="border-bottom: 2px solid var(--es-border);">
+                        <th class="ps-4">User Information</th>
+                        <th>Registered Role</th>
+                        <th>Active Status</th>
+                        <th>Email & Verification Status</th>
+                        <th>Joined Date</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if users %}
+                    {% for u in users %}
+                    <tr style="border-bottom: 1px solid var(--es-border);">
+                        <!-- Avatar & Profile info -->
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3 py-1">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; background: var(--es-dark-3); flex-shrink: 0; border: 1px solid var(--es-border); padding: 2px;">
+                                    {% if u.profile.photo %}
+                                    <img src="{{ u.profile.photo.url }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                    {% else %}
+                                    <div class="w-100 h-100 d-flex align-items-center justify-content-center text-white fw-bold bg-dark" style="font-size: 0.9rem; border-radius: 50%;">
+                                        {{ u.first_name|first|upper }}{{ u.last_name|first|upper }}
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white">{{ u.get_full_name|default:u.username }}</div>
+                                    <div class="small text-muted">@{{ u.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Role with Inline Change Dropdown Form -->
+                        <td>
+                            <form action="{% url 'admin_user_change_role' u.id %}" method="post" class="d-inline-flex align-items-center">
+                                {% csrf_token %}
+                                <select name="role" class="form-select form-select-sm py-0 px-2 text-white bg-dark border-secondary" style="font-size: 0.75rem; border-radius: 6px; width: 120px; height: 28px;" onchange="this.form.submit()">
+                                    <option value="attendee" {% if not u.is_staff and not u.is_superuser and u.profile.role == 'attendee' %}selected{% endif %}>Attendee</option>
+                                    <option value="organizer" {% if not u.is_staff and not u.is_superuser and u.profile.role == 'organizer' %}selected{% endif %}>Organizer</option>
+                                </select>
+                            </form>
+                        </td>
+
+                        <!-- Active status -->
+                        <td>
+                            <form action="{% url 'admin_user_toggle_status' u.id %}" method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm {% if u.is_active %}btn-outline-success{% else %}btn-outline-danger{% endif %} py-0.5 px-2.5 rounded-pill font-monospace" style="font-size: 0.72rem; letter-spacing: 0.02em;" {% if u == request.user %}disabled title="You cannot deactivate yourself"{% endif %}>
+                                    {% if u.is_active %}
+                                    <span class="d-inline-block rounded-circle bg-success me-1" style="width: 5px; height: 5px; vertical-align: middle;"></span>Active
+                                    {% else %}
+                                    <span class="d-inline-block rounded-circle bg-danger me-1" style="width: 5px; height: 5px; vertical-align: middle;"></span>Inactive
+                                    {% endif %}
+                                </button>
+                            </form>
+                        </td>
+
+                        <!-- Contact & Verification status -->
+                        <td>
+                            <div class="small text-white"><i class="bi bi-envelope me-1 text-muted"></i>{{ u.email }}</div>
+                            {% if u.profile.is_verified %}
+                            <div class="small text-success mt-0.5" style="font-size: 0.72rem;"><i class="bi bi-patch-check-fill me-1"></i>Verified Identity</div>
+                            {% else %}
+                            <div class="small text-muted mt-0.5" style="font-size: 0.72rem;"><i class="bi bi-patch-question me-1"></i>Unverified Identity</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Join Date -->
+                        <td>
+                            <div class="small text-white fw-semibold">{{ u.date_joined|date:"d M Y" }}</div>
+                            <div class="small text-muted mt-0.5" style="font-size: 0.72rem;"><i class="bi bi-clock me-1"></i>{{ u.date_joined|time:"H:i" }}</div>
+                        </td>
+
+                        <!-- Actions -->
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-2">
+                                <a href="{% url 'admin_reset_user_password' u.id %}" class="btn btn-sm btn-outline-info fw-semibold px-2.5" title="Reset Password and Send Temporary Password">
+                                    <i class="bi bi-key me-1"></i> Reset PW
+                                </a>
+                                <a href="{% url 'organizer_profile' u.username %}" class="btn btn-outline-primary btn-sm px-2.5" target="_blank" title="Review Profile">
+                                    <i class="bi bi-eye"></i> Profile
+                                </a>
+                                <a href="{% url 'admin_user_delete' u.id %}" class="btn btn-outline-danger btn-sm px-2.5 {% if u == request.user %}disabled{% endif %}" title="{% if u == request.user %}You cannot delete yourself{% else %}Permanently Delete Account{% endif %}">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    {% else %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="bi bi-inbox fs-1 text-muted d-block mb-2"></i>
+                            <span class="text-muted">No accounts match the search query.</span>
+                        </td>
+                    </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% elif active_tab == 'admins' %}
+    <!-- Admins Panel -->
+    <div class="card border shadow-sm mb-5 overflow-hidden" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+        <div class="card-header border-bottom p-3 d-flex justify-content-between align-items-center" style="background: rgba(255,255,255,0.01); border-color: var(--es-border)!important;">
+            <h5 class="fw-bold mb-0 text-white"><i class="bi bi-shield-lock me-2 text-warning"></i>Administrator Accounts</h5>
+            <a href="{% url 'admin_add_admin' %}" class="btn btn-sm btn-warning fw-semibold px-3">
+                <i class="bi bi-person-plus-fill me-1"></i>Add New Admin
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="table align-middle mb-0 custom-admin-table" style="color: var(--es-text);">
+                <thead>
+                    <tr class="text-muted" style="border-bottom: 2px solid var(--es-border);">
+                        <th class="ps-4">Admin Information</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Joined</th>
+                        <th class="text-end pe-4">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for adm in admins %}
+                    <tr style="border-bottom: 1px solid var(--es-border);">
+                        <!-- Avatar & Name -->
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center gap-3 py-1">
+                                <div style="width: 44px; height: 44px; border-radius: 50%; background: rgba(239,68,68,0.15); flex-shrink: 0; border: 2px solid rgba(239,68,68,0.3); display:flex; align-items:center; justify-content:center;">
+                                    <span class="fw-bold text-danger" style="font-size:0.85rem;">{{ adm.first_name|first|upper }}{{ adm.last_name|first|upper }}</span>
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-white">{{ adm.get_full_name|default:adm.username }}
+                                        {% if adm == request.user %}<span class="badge ms-1" style="font-size:0.6rem;background:rgba(249,115,22,0.3);color:#fb923c;">You</span>{% endif %}
+                                    </div>
+                                    <div class="small text-muted">@{{ adm.username }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <!-- Email -->
+                        <td><div class="small text-white"><i class="bi bi-envelope me-1 text-muted"></i>{{ adm.email }}</div></td>
+                        <!-- Status -->
+                        <td>
+                            {% if adm.is_active %}
+                            <span class="badge rounded-pill" style="background:rgba(16,185,129,0.15);color:#34d399;font-size:0.72rem;">
+                                <span class="d-inline-block rounded-circle bg-success me-1" style="width:5px;height:5px;vertical-align:middle;"></span>Active
+                            </span>
+                            {% else %}
+                            <span class="badge rounded-pill" style="background:rgba(239,68,68,0.15);color:#f87171;font-size:0.72rem;">
+                                <span class="d-inline-block rounded-circle bg-danger me-1" style="width:5px;height:5px;vertical-align:middle;"></span>Inactive
+                            </span>
+                            {% endif %}
+                        </td>
+                        <!-- Joined -->
+                        <td>
+                            <div class="small text-white fw-semibold">{{ adm.date_joined|date:"d M Y" }}</div>
+                        </td>
+                        <!-- Actions -->
+                        <td class="text-end pe-4">
+                            <div class="d-inline-flex gap-2 align-items-center">
+                                {% if adm != request.user %}
+                                <form action="{% url 'admin_user_change_role' adm.id %}" method="post" style="display:inline;" onsubmit="return confirm('Demote this admin to Attendee? They will lose all admin privileges.')">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="role" value="attendee">
+                                    <button type="submit" class="btn btn-outline-warning btn-sm px-3" title="Remove Admin Privileges">
+                                        <i class="bi bi-shield-x me-1"></i>Demote
+                                    </button>
+                                </form>
+                                <form action="{% url 'admin_user_toggle_status' adm.id %}" method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm {% if adm.is_active %}btn-outline-secondary{% else %}btn-outline-success{% endif %} px-2" title="Toggle Active Status">
+                                        {% if adm.is_active %}<i class="bi bi-pause-circle"></i>{% else %}<i class="bi bi-play-circle"></i>{% endif %}
+                                    </button>
+                                </form>
+                                <a href="{% url 'admin_user_delete' adm.id %}" class="btn btn-outline-danger btn-sm px-2" title="Delete Admin Account">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                                {% else %}
+                                <span class="text-muted small"><i class="bi bi-lock me-1"></i>Your account</span>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-shield-x fs-1 text-muted d-block mb-2"></i>
+                            <span class="text-muted">No admin accounts found.</span>
+                        </td>
+                    </tr>
+                    {% endfor %}
                 </tbody>
             </table>
         </div>

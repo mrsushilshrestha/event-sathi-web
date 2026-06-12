@@ -2,64 +2,89 @@
 {% block title %}{{ event.title }}{% endblock %}
 
 {% block content %}
+<style>
+    #hero-breadcrumb .breadcrumb-item + .breadcrumb-item::before {
+        color: white !important;
+        content: "/";
+    }
+</style>
 <!-- Hero Banner -->
-<div style="background:linear-gradient(135deg,var(--es-dark-2),#0d0d24);border-bottom:1px solid var(--es-border);">
+<div style="background:linear-gradient(135deg,#1e293b,#334155);border-bottom:1px solid rgba(0,0,0,0.1);position:relative;">
     {% if event.banner %}
-    <div style="height:350px;overflow:hidden;position:relative;">
-        <img src="{{ event.banner.url }}" style="width:100%;height:100%;object-fit:cover;opacity:0.4;">
-        <div style="position:absolute;inset:0;background:linear-gradient(to top,var(--es-dark) 20%,transparent 70%);"></div>
+    <div style="position:absolute;inset:0;overflow:hidden;">
+        <img src="{{ event.banner.url }}" style="width:100%;height:100%;object-fit:cover;opacity:0.6;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(15,23,42,0.7) 50%,rgba(15,23,42,0.4) 80%,transparent 100%);"></div>
     </div>
     {% endif %}
-    <div class="container py-4">
-        <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item"><a href="{% url 'event_list' %}" class="text-muted text-decoration-none">Events</a></li>
-                <li class="breadcrumb-item active text-muted">{{ event.title|truncatewords:5 }}</li>
+    <div class="container py-5" style="position:relative;">
+        <nav aria-label="breadcrumb" class="mb-3" id="hero-breadcrumb">
+            <ol class="breadcrumb" style="background:transparent !important;">
+                <li class="breadcrumb-item">
+                    <a href="{% url 'event_list' %}" 
+                       style="color:white !important; text-decoration:none !important; font-weight:bold !important; font-size:1.1rem !important; text-shadow:0 2px 6px rgba(0,0,0,0.8) !important;">
+                        Events
+                    </a>
+                </li>
+                <li class="breadcrumb-item active" 
+                    style="color:white !important; font-weight:bold !important; font-size:1.1rem !important; text-shadow:0 2px 6px rgba(0,0,0,0.8) !important;">
+                    {{ event.title|truncatewords:5 }}
+                </li>
             </ol>
         </nav>
         <div class="row align-items-start">
             <div class="col-lg-8">
                 <div class="d-flex flex-wrap gap-2 mb-3">
-                    <span class="badge badge-category">{{ event.category.name|default:"Event" }}</span>
-                    <span class="badge badge-status-{{ event.status }}">{{ event.get_status_display }}</span>
-                    {% if event.is_virtual %}<span class="badge" style="background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);"><i class="bi bi-camera-video me-1"></i>Virtual/Hybrid</span>{% endif %}
-                    {% if event.is_featured %}<span class="badge" style="background:rgba(245,158,11,0.15);color:#fbbf24;border:1px solid rgba(245,158,11,0.3);"><i class="bi bi-star-fill me-1"></i>Featured</span>{% endif %}
+                    <span class="badge badge-category" style="background:#54a0ff;color:white;font-weight:bold;padding:8px 16px;font-size:1rem;border-radius:8px;">{{ event.get_category_display }}</span>
+                    <span class="badge badge-status-{{ event.status }}" style="background:#22c55e;color:white;font-weight:bold;padding:8px 16px;font-size:1rem;border-radius:8px;">{{ event.get_status_display }}</span>
+                    {% if event.is_virtual %}<span class="badge" style="background:#22d3ee;color:white;font-weight:bold;padding:8px 16px;font-size:1rem;border-radius:8px;"><i class="bi bi-camera-video me-1"></i>Virtual/Hybrid</span>{% endif %}
+                    {% if event.is_featured %}<span class="badge" style="background:#fbbf24;color:#1f2937;font-weight:bold;padding:8px 16px;font-size:1rem;border-radius:8px;"><i class="bi bi-star-fill me-1"></i>Featured</span>{% endif %}
                 </div>
-                <h1 class="fw-bold text-white mb-3">{{ event.title }}</h1>
-                <div class="d-flex flex-wrap gap-4 mb-4">
-                    <div class="d-flex align-items-center gap-2 text-muted">
-                        <i class="bi bi-calendar3 text-warning"></i>
-                        <span>{{ event.start_date|date:"D, d M Y, g:i A" }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-muted">
-                        <i class="bi bi-geo-alt text-warning"></i>
-                        <span>{{ event.venue }}, {{ event.city }}</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2 text-muted">
-                        <i class="bi bi-people text-warning"></i>
-                        <span>{{ event.get_registered_count }} / {{ event.max_capacity }} registered</span>
-                    </div>
-                </div>
-                <div class="d-flex gap-3 flex-wrap">
-                    <a href="{% url 'event_agenda' event.slug %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-list-check me-1"></i>Agenda
-                    </a>
-                    <a href="{% url 'event_speakers' event.slug %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-mic me-1"></i>Speakers
-                    </a>
-                    <a href="{% url 'event_sponsors' event.slug %}" class="btn btn-outline-primary btn-sm">
-                        <i class="bi bi-building me-1"></i>Sponsors
-                    </a>
-                    {% if user == event.organizer %}
-                    <a href="{% url 'event_manage' event.slug %}" class="btn btn-warning btn-sm">
-                        <i class="bi bi-gear me-1"></i>Manage Event
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <h1 class="fw-bold mb-0" style="color: #fff; text-shadow: 0 3px 10px rgba(0,0,0,0.8);font-size:2.75rem;">{{ event.title }}</h1>
+                    {% if user.is_authenticated %}
+                    <form action="{% url 'toggle_favorite_event' event.slug %}" method="post" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center" 
+                                style="width:48px;height:48px;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);border:2px solid rgba(255,255,255,0.4);color:{% if event.id in favorite_event_ids %}#fbbf24{% else %}#e2e8f0{% endif %};transition:all 0.2s;"
+                                onmouseover="this.style.transform='scale(1.15)';" onmouseout="this.style.transform='scale(1)';"
+                                title="{% if event.id in favorite_event_ids %}Remove from Interests{% else %}Add to Interests{% endif %}">
+                            <i class="bi bi-star{% if event.id in favorite_event_ids %}-fill{% endif %}" style="font-size:1.5rem;"></i>
+                        </button>
+                    </form>
+                    {% else %}
+                    <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-sm rounded-circle d-flex align-items-center justify-content-center" 
+                       style="width:48px;height:48px;background:rgba(0,0,0,0.7);backdrop-filter:blur(6px);border:2px solid rgba(255,255,255,0.4);color:#e2e8f0;transition:all 0.2s;"
+                       onmouseover="this.style.transform='scale(1.15)';" onmouseout="this.style.transform='scale(1)';"
+                       title="Login to Add to Interests">
+                        <i class="bi bi-star" style="font-size:1.5rem;"></i>
                     </a>
                     {% endif %}
                 </div>
+                <div class="d-flex flex-wrap gap-4 mb-4">
+                    <div class="d-flex align-items-center gap-2" style="color:white;font-weight:500;font-size:1.1rem;text-shadow: 0 2px 6px rgba(0,0,0,0.7);">
+                        <i class="bi bi-calendar3" style="color:#fbbf24;font-size:1.3rem;"></i>
+                        <span>{{ event.start_date|date:"D, d M Y, g:i A" }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" style="color:white;font-weight:500;font-size:1.1rem;text-shadow: 0 2px 6px rgba(0,0,0,0.7);">
+                        <i class="bi bi-geo-alt" style="color:#fbbf24;font-size:1.3rem;"></i>
+                        <span>{{ event.venue }}, {{ event.city }}</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" style="color:white;font-weight:500;font-size:1.1rem;text-shadow: 0 2px 6px rgba(0,0,0,0.7);">
+                        <i class="bi bi-people" style="color:#fbbf24;font-size:1.3rem;"></i>
+                        <span>{{ event.get_registered_count }} / {{ event.max_capacity }} registered</span>
+                    </div>
+                </div>
+                {% if user == event.organizer %}
+                <div class="d-flex gap-3 flex-wrap">
+                    <a href="{% url 'event_manage' event.slug %}" class="btn btn-warning btn-sm">
+                        <i class="bi bi-gear me-1"></i>Manage Event
+                    </a>
+                </div>
+                {% endif %}
             </div>
             <div class="col-lg-4 mt-4 mt-lg-0">
                 <div class="card p-4">
-                    {% if is_registered %}
+                    {% if is_registered_free %}
                     <div class="text-center mb-3">
                         <div class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);font-size:0.9rem;padding:8px 16px;">
                             <i class="bi bi-check-circle me-2"></i>You're registered!
@@ -69,21 +94,30 @@
                         <i class="bi bi-qr-code me-2"></i>View My Ticket
                     </a>
                     {% elif event.is_registration_open %}
+                    {% if has_any_registrations %}
+                    <div class="text-center mb-3">
+                        <div class="badge" style="background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);font-size:0.9rem;padding:8px 16px;">
+                            <i class="bi bi-check-circle me-2"></i>You have tickets!
+                        </div>
+                    </div>
+                    <a href="{% url 'view_ticket' registration.ticket_id %}" class="btn btn-primary w-100 mb-2">
+                        <i class="bi bi-qr-code me-2"></i>View My Ticket
+                    </a>
+                    {% endif %}
                     <h6 class="fw-bold mb-3">Get Your Ticket</h6>
                     {% for tier in tiers %}
                     <div class="d-flex justify-content-between align-items-center p-3 mb-2 rounded-3" style="background:rgba(255,255,255,0.04);border:1px solid var(--es-border);">
                         <div>
                             <div class="fw-semibold small">{{ tier.name }}</div>
-                            <small class="text-muted">{{ tier.get_available }} seats left</small>
                         </div>
                         <div class="fw-bold {% if tier.price == 0 %}text-success{% else %}text-white{% endif %}">
-                            {% if tier.price == 0 %}Free{% else %}₹{{ tier.price|floatformat:0 }}{% endif %}
+                            {% if tier.price == 0 %}Free{% else %}Rs{{ tier.price|floatformat:0 }}{% endif %}
                         </div>
                     </div>
                     {% endfor %}
                     {% if user.is_authenticated %}
                     <a href="{% url 'event_register' event.slug %}" class="btn btn-primary w-100 mt-2">
-                        <i class="bi bi-ticket-perforated me-2"></i>Register Now
+                        <i class="bi bi-ticket-perforated me-2"></i>{% if has_any_registrations %}Buy Another Ticket{% else %}Register Now{% endif %}
                     </a>
                     {% else %}
                     <a href="{% url 'login' %}?next={{ request.path }}" class="btn btn-primary w-100 mt-2">
@@ -126,86 +160,6 @@
             </div>
             {% endif %}
 
-            <!-- Social Interaction Bar -->
-            <div class="card p-3 mb-5 d-flex flex-row justify-content-between align-items-center" style="background: var(--es-card-bg); border: 1px solid var(--es-border); border-radius: var(--es-radius);">
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted" onclick="likeEvent({{ event.id }})" id="like-btn-{{ event.id }}" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600; transition: all 0.15s;">
-                        <i class="bi {% if user.is_authenticated and event.likes.all %}bi-hand-thumbs-up-fill text-warning{% else %}bi-hand-thumbs-up{% endif %} fs-5" id="like-icon-{{ event.id }}"></i>
-                        <span id="like-text-{{ event.id }}" class="{% if user.is_authenticated and event.likes.all %}text-warning{% endif %}">Like</span>
-                        <span class="badge bg-secondary rounded-pill" id="like-count-{{ event.id }}">{{ event.likes.count }}</span>
-                    </button>
-
-                    <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted" onclick="document.getElementById('comment-input-{{ event.id }}').focus()" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600;">
-                        <i class="bi bi-chat-text fs-5"></i>
-                        <span>Comment</span>
-                        <span class="badge bg-secondary rounded-pill" id="comment-count-{{ event.id }}">{{ event.comments.count }}</span>
-                    </button>
-                </div>
-
-                <div class="d-flex align-items-center gap-3">
-                    <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted" onclick="toggleSaveEvent(null, {{ event.id }})" id="save-btn-{{ event.id }}" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600;">
-                        <i class="bi {% if user.is_authenticated and event.saved_by.all %}bi-bookmark-fill text-primary{% else %}bi-bookmark{% endif %} fs-5" id="save-icon-btn-{{ event.id }}"></i>
-                        <span id="save-btn-text-{{ event.id }}" class="{% if user.is_authenticated and event.saved_by.all %}text-primary{% endif %}">Save</span>
-                    </button>
-
-                    <div class="dropdown">
-                        <button class="btn btn-social-action d-flex align-items-center gap-2 py-2 px-3 rounded-pill border-0 text-muted dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: rgba(255,255,255,0.02); font-size: 0.9rem; font-weight: 600;">
-                            <i class="bi bi-star fs-5"></i>
-                            <span>Interest</span>
-                            <span class="badge bg-secondary rounded-pill" id="interest-count-{{ event.id }}">{{ event.interests.count }}</span>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end shadow border-0" style="border-radius: 12px; background: var(--es-dd-bg);">
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="#" onclick="setEventInterest(event, {{ event.id }}, 'interested')">
-                                    <i class="bi bi-star-fill text-warning"></i>
-                                    <span>Interested</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item d-flex align-items-center gap-2 py-2" href="#" onclick="setEventInterest(event, {{ event.id }}, 'not_interested')">
-                                    <i class="bi bi-x-circle text-danger"></i>
-                                    <span>Not Interested</span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Scrollable Comments Section -->
-            <div class="card p-4 mb-5 border" style="background: var(--es-card-bg); border-color: var(--es-border)!important; border-radius: var(--es-radius);">
-                <h4 class="fw-bold mb-4 text-white">Event Discussion</h4>
-
-                {% if user.is_authenticated %}
-                <div class="d-flex gap-3 mb-4">
-                    <div class="avatar-sm d-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px; font-size: 1rem; border-radius: 50%; background: linear-gradient(135deg, var(--es-primary), var(--es-secondary)); color: #fff;">
-                        {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
-                    </div>
-                    <div class="flex-grow-1 position-relative">
-                        <textarea class="form-control comment-input pr-5 py-2.5 px-3" id="comment-input-{{ event.id }}" rows="2" placeholder="Write a public comment..." style="border-radius: 16px; resize: none; font-size: 0.9rem; background: var(--es-input-bg); border-color: var(--es-border-strong);"></textarea>
-                        <button class="btn btn-warning btn-sm mt-2 px-3 fw-semibold" onclick="postComment({{ event.id }})" style="border-radius: 20px;">
-                            <i class="bi bi-send-fill me-1"></i>Post Comment
-                        </button>
-                    </div>
-                </div>
-                {% else %}
-                <div class="text-center p-3 mb-4 rounded-3" style="background: rgba(255,255,255,0.02); border: 1px dashed var(--es-border);">
-                    <small class="text-muted">Please <a href="{% url 'login' %}?next={{ request.path }}" class="text-warning text-decoration-none">login</a> to participate in the event discussion.</small>
-                </div>
-                {% endif %}
-
-                <!-- Comments List -->
-                <div class="comments-list d-flex flex-column gap-3" id="comments-list-{{ event.id }}">
-                    <div class="text-center text-muted py-4 loading-indicator" id="comments-loading-{{ event.id }}">
-                        <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
-                        <span class="ms-2 small">Loading discussion...</span>
-                    </div>
-                    <div class="comments-container d-flex flex-column gap-3" id="comments-container-{{ event.id }}">
-                        <!-- Dynamic Comment nodes are injected here -->
-                    </div>
-                </div>
-            </div>
-
             <!-- Announcements -->
             {% if announcements %}
             <div class="mb-5">
@@ -224,29 +178,7 @@
             </div>
             {% endif %}
 
-            <!-- Sessions preview -->
-            {% if sessions %}
-            <div class="mb-5">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h4 class="fw-bold mb-0">Schedule Preview</h4>
-                    <a href="{% url 'event_agenda' event.slug %}" class="text-warning text-decoration-none small">Full Agenda →</a>
-                </div>
-                {% for session in sessions %}
-                <div class="card p-3 mb-2 track-{{ session.track }}">
-                    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
-                        <div>
-                            <div class="fw-semibold">{{ session.title }}</div>
-                            {% if session.speaker %}<small class="text-muted"><i class="bi bi-mic me-1"></i>{{ session.speaker.name }}</small>{% endif %}
-                        </div>
-                        <div class="text-end">
-                            <small class="text-muted">{{ session.start_time|date:"g:i A" }} — {{ session.end_time|date:"g:i A" }}</small>
-                            {% if session.room %}<br><small class="text-muted"><i class="bi bi-door-open me-1"></i>{{ session.room }}</small>{% endif %}
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% endif %}
+
 
             <!-- Speakers preview -->
             {% if speakers %}
@@ -336,12 +268,4 @@
         </div>
     </div>
 </div>
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        loadComments({{ event.id }});
-    });
-</script>
-{% endblock %}
 {% endblock %}

@@ -6,7 +6,6 @@ class UserProfile(models.Model):
     ROLE_CHOICES = [
         ('attendee', 'Attendee'),
         ('organizer', 'Organizer'),
-        ('speaker', 'Speaker'),
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='attendee')
@@ -15,13 +14,10 @@ class UserProfile(models.Model):
     organization = models.CharField(max_length=200, blank=True)
     designation = models.CharField(max_length=200, blank=True)
     photo = models.ImageField(upload_to='profile_photos/', blank=True, null=True)
-    cover_photo = models.ImageField(upload_to='cover_photos/', blank=True, null=True)
-    location = models.CharField(max_length=255, blank=True)
     linkedin = models.URLField(blank=True)
     twitter = models.URLField(blank=True)
     website = models.URLField(blank=True)
     interests = models.TextField(blank=True, help_text='Comma-separated interests')
-    preferences = models.JSONField(default=dict, blank=True)
     must_change_password = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -37,6 +33,15 @@ class UserProfile(models.Model):
 
 class EmailVerificationCode(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='verification_codes')
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} - {self.code}"
+
+
+class PasswordResetCode(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='password_reset_codes')
     code = models.CharField(max_length=6)
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -74,19 +79,3 @@ class Message(models.Model):
 
     def __str__(self):
         return f"{self.sender.username} -> {self.receiver.username}"
-
-
-class OrganizerProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='organizer_profile')
-    org_name = models.CharField(max_length=200)
-    bio = models.TextField(blank=True)
-    phone = models.CharField(max_length=20)
-    email = models.EmailField(blank=True)
-    website = models.URLField(blank=True)
-    logo = models.ImageField(upload_to='organizer_logos/', blank=True, null=True)
-    cover_image = models.ImageField(upload_to='organizer_covers/', blank=True, null=True)
-    is_verified = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.user.username} - Organizer ({self.org_name})"

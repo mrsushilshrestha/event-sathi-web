@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}Processing Payment - eSewa{% endblock %}
+
+{% block content %}
+<div class="container py-5" style="max-width:500px;">
+    <div class="card p-5 text-center">
+        <div class="spinner-border text-warning mb-3" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <h5 class="fw-bold mb-2">Redirecting to eSewa...</h5>
+        <p class="text-muted">Please wait while we process your payment.</p>
+    </div>
+</div>
+
+<form id="esewa-form" action="https://rc-epay.esewa.com.np/api/epay/main/v2/form" method="POST" style="display:none;">
+    <input type="hidden" name="amount" value="{{ amount }}">
+    <input type="hidden" name="tax_amount" value="{{ tax_amount }}">
+    <input type="hidden" name="total_amount" value="{{ total_amount }}">
+    <input type="hidden" name="transaction_uuid" value="{{ transaction_uuid }}">
+    <input type="hidden" name="product_code" value="{{ product_code }}">
+    <input type="hidden" name="product_service_charge" value="{{ product_service_charge }}">
+    <input type="hidden" name="product_delivery_charge" value="{{ product_delivery_charge }}">
+    <input type="hidden" name="success_url" value="{{ success_url }}">
+    <input type="hidden" name="failure_url" value="{{ failure_url }}">
+    <input type="hidden" name="signed_field_names" value="{{ signed_field_names }}">
+    <input type="hidden" name="signature" value="{{ signature }}">
+</form>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('esewa-form').submit();
+});
+</script>
+{% endblock %}

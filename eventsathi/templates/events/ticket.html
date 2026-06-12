@@ -77,7 +77,7 @@
                 <div class="col-6">
                     <div class="text-muted small mb-1">Amount Paid</div>
                     <div class="fw-semibold {% if registration.amount_paid == 0 %}text-success{% endif %}">
-                        {% if registration.amount_paid == 0 %}Free{% else %}₹{{ registration.amount_paid|floatformat:0 }}{% endif %}
+                        {% if registration.amount_paid == 0 %}Free{% else %}Rs{{ registration.amount_paid|floatformat:0 }}{% endif %}
                     </div>
                 </div>
                 <div class="col-6">
@@ -101,11 +101,8 @@
     </div>
 
     <div class="mt-4 text-center">
-        <a href="{% url 'event_detail' registration.event.slug %}" class="btn btn-outline-primary me-2">
+        <a href="{% url 'event_detail' registration.event.slug %}" class="btn btn-outline-primary">
             <i class="bi bi-calendar-event me-1"></i>Event Details
-        </a>
-        <a href="{% url 'event_agenda' registration.event.slug %}" class="btn btn-primary">
-            <i class="bi bi-list-check me-1"></i>View Schedule
         </a>
     </div>
 </div>

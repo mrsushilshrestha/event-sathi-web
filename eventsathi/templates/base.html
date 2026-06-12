@@ -9,181 +9,122 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
-    <style>
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .line-clamp-3 {
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .text-truncate {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .card-title {
-            line-height: 1.4;
-            word-wrap: break-word;
-        }
-        .card-text {
-            word-wrap: break-word;
-        }
-
-    /* Social Comment Modal (FB/IG Style) */
-    .modal-social .modal-dialog {
-        max-width: 900px;
-        margin: 1.75rem auto;
-    }
-    .modal-social .modal-content {
-        background: var(--es-dark-1);
-        border: 1px solid var(--es-border);
-        border-radius: 20px;
-        overflow: hidden;
-        height: 85vh;
-    }
-    .modal-social .modal-body {
-        padding: 0;
-        display: flex;
-        flex-direction: row;
-        height: 100%;
-    }
-    .modal-social .event-preview-side {
-        flex: 1.2;
-        background: #000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-right: 1px solid var(--es-border);
-    }
-    .modal-social .comments-side {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        background: var(--es-dark-1);
-    }
-    .modal-social .comments-header {
-        padding: 15px 20px;
-        border-bottom: 1px solid var(--es-border);
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
-    .modal-social .comments-list {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px;
-        scrollbar-width: thin;
-    }
-    .modal-social .comments-footer {
-        padding: 15px 20px;
-        border-top: 1px solid var(--es-border);
-        background: var(--es-dark-1);
-    }
-    
-    /* Mobile styles for social modal */
-    @media (max-width: 991px) {
-        .modal-social .modal-dialog {
-            margin: 0;
-            max-width: 100%;
-            height: 100%;
-        }
-        .modal-social .modal-content {
-            height: 100%;
-            border-radius: 0;
-            border: none;
-        }
-        .modal-social .modal-body {
-            flex-direction: column;
-        }
-        .modal-social .event-preview-side {
-            flex: 0 0 40%;
-            border-right: none;
-            border-bottom: 1px solid var(--es-border);
-        }
-        .modal-social .comments-side {
-            flex: 1;
-        }
-    }
-    
-    .comment-input-wrapper {
-        position: relative;
-        background: var(--es-dark-2);
-        border-radius: 25px;
-        padding: 5px 15px;
-        border: 1px solid var(--es-border);
-    }
-    .comment-input-wrapper input {
-        background: transparent;
-        border: none;
-        color: white;
-        padding: 8px 0;
-        width: calc(100% - 40px);
-    }
-    .comment-input-wrapper input:focus {
-        outline: none;
-    }
-    .comment-input-wrapper .btn-post {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        color: var(--es-primary);
-        font-weight: 600;
-        background: transparent;
-        border: none;
-    }
-    </style>
     {% block extra_css %}{% endblock %}
     <!-- Apply saved theme before first paint to avoid flash -->
     <script>(function(){var t=localStorage.getItem('es-theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
 </head>
 <body>
 
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top" id="mainNav">
+<nav class="navbar navbar-expand-md" id="mainNav">
     <div class="container">
-        <!-- API Connection Indicator -->
-        <div class="d-flex align-items-center me-3" id="apiConnectionIndicator" title="Checking API status...">
-            <div id="connectionCircle" style="width: 12px; height: 12px; border-radius: 50%; background-color: #ffc107; transition: background-color 0.3s ease;"></div>
-        </div>
-        
-        <a class="navbar-brand fw-bold d-flex align-items-center" href="{% url 'home' %}">
-            <img src="{% static 'images/logo.png' %}" alt="EventSathi" style="height: 50px; width: auto;">
+        <a class="navbar-brand fw-bold d-flex flex-column align-items-center" href="{% url 'home' %}">
+            <img src="{% static 'images/logo.png' %}" alt="EventSathi" style="height: 45px; width: auto;">
+            <span style="color: #f97316; font-size: 0.85rem; margin-top: 2px;">EventSathi</span>
         </a>
+        
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
+            {% if user.is_authenticated and user.is_staff or user.is_authenticated and user.is_superuser %}
+            {# ===== ADMIN-ONLY NAVBAR ===== #}
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item">
+                    <a class="nav-link text-warning fw-semibold" href="{% url 'admin_dashboard' %}"><i class="bi bi-shield-shaded me-1"></i>Admin Panel</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ms-auto align-items-center">
+                <!-- Search Icon Button -->
+                <li class="nav-item me-1 d-md-none d-lg-none">
+                    <button class="btn border-0" type="button" id="mobileSearchBtn" style="color: var(--es-text);">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </li>
+                <li class="nav-item me-1 d-none d-md-inline">
+                    <button class="btn border-0" type="button" id="desktopSearchBtn" style="color: var(--es-text);">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </li>
+                <li class="nav-item dropdown me-1">
+                    <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                        {% with profile=user.profile %}
+                        {% if profile.photo %}
+                        <img src="{{ profile.photo.url }}" class="avatar-sm" style="object-fit:cover;" alt="">
+                        {% else %}
+                        <div class="avatar-sm" style="background:rgba(239,68,68,0.25);color:#f87171;">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                        {% endif %}
+                        {% endwith %}
+                        <span>{{ user.first_name }}</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end shadow border-0">
+                        <li>
+                            <div class="px-3 py-2 border-bottom" style="border-color:var(--es-border)!important;">
+                                <small class="text-muted d-block">Signed in as</small>
+                                <span class="fw-semibold small text-white">{{ user.first_name }} {{ user.last_name }}</span>
+                                <span class="badge ms-1" style="font-size:0.6rem;background:rgba(239,68,68,0.3);color:#f87171;">Admin</span>
+                            </div>
+                        </li>
+                        <li><a class="dropdown-item text-warning" href="{% url 'admin_dashboard' %}"><i class="bi bi-shield-shaded me-2"></i>Admin Panel</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <button class="theme-toggle border-0" id="themeToggle" title="Toggle light/dark mode">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
+                </li>
+            </ul>
+            {% else %}
+            {# ===== REGULAR USER NAVBAR ===== #}
             <ul class="navbar-nav me-auto">
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'event_list' %}"><i class="bi bi-grid-3x3-gap me-1"></i>Events</a>
                 </li>
                 {% if user.is_authenticated %}
+                {% with profile=user.profile %}
+                {% if profile.role == 'organizer' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{% url 'my_events' %}"><i class="bi bi-calendar-check me-1"></i>My Events</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'my_tickets' %}"><i class="bi bi-ticket-perforated me-1"></i>My Tickets</a>
                 </li>
+                {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{% url 'network_hub' %}"><i class="bi bi-people me-1"></i>Network</a>
+                    <a class="nav-link" href="{% url 'my_tickets' %}"><i class="bi bi-ticket-perforated me-1"></i>My Tickets</a>
+                </li>
+                {% endif %}
+                {% endwith %}
+                <li class="nav-item">
+                    <a class="nav-link position-relative" href="{% url 'network_hub' %}">
+                        <i class="bi bi-people me-1"></i>Network
+                        {% if pending_connection_count > 0 %}
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill" style="background:var(--es-primary);font-size:0.6rem;padding:0.2rem 0.4rem;">
+                                {{ pending_connection_count }}
+                            </span>
+                        {% endif %}
+                    </a>
                 </li>
                 {% endif %}
             </ul>
             <ul class="navbar-nav ms-auto align-items-center">
-                <!-- Theme toggle -->
-                <li class="nav-item me-1">
-                    <button class="theme-toggle border-0" id="themeToggle" title="Toggle light/dark mode">
-                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                <!-- Search Icon Button -->
+                <li class="nav-item me-1 d-md-none d-lg-none">
+                    <button class="btn border-0" type="button" id="mobileSearchBtn" style="color: var(--es-text);">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </li>
+                <li class="nav-item me-1 d-none d-md-inline">
+                    <button class="btn border-0" type="button" id="desktopSearchBtn" style="color: var(--es-text);">
+                        <i class="bi bi-search"></i>
                     </button>
                 </li>
                 {% if user.is_authenticated %}
                 {% with profile=user.profile %}
-                {% if profile.role == 'organizer' or user.is_staff %}
+                {% if profile.role == 'organizer' %}
                 <li class="nav-item me-2">
-                    <a class="btn btn-warning btn-sm px-3 fw-semibold" href="{% url 'event_create' %}">
+                    <a class="btn btn-sm px-3 fw-semibold post-event-btn" href="{% url 'event_create' %}" style="color: white !important;">
                         <i class="bi bi-plus-circle me-1"></i>Post Event
                     </a>
                 </li>
@@ -194,30 +135,15 @@
                         <i class="bi bi-chat-dots fs-5"></i>
                     </a>
                 </li>
-                
-                <!-- Synced Notification Bell Dropdown Tray -->
-                <li class="nav-item dropdown me-2 position-relative">
-                    <a class="nav-link dropdown-toggle position-relative text-muted" href="#" id="notificationDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" onclick="fetchNavbarNotifications()" style="box-shadow:none;">
-                        <i class="bi bi-bell fs-5"></i>
-                        <span class="position-absolute top-1 start-75 translate-middle badge rounded-pill bg-danger d-none" id="notificationBadge" style="font-size: 0.6rem; padding: 0.25em 0.4em;">0</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-0" aria-labelledby="notificationDropdown" style="width: 320px; border-radius: 14px; overflow: hidden; background: var(--es-dd-bg);">
-                        <div class="px-3 py-2 border-bottom d-flex justify-content-between align-items-center" style="border-color:var(--es-border)!important;">
-                            <span class="fw-bold text-white fs-6">Notifications</span>
-                            <button class="btn btn-link text-warning p-0 border-0" onclick="markAllNotificationsAsRead(event)" style="font-size:0.75rem; text-decoration:none; box-shadow:none;">Mark all read</button>
-                        </div>
-                        <div id="notificationItemsContainer" style="max-height: 280px; overflow-y: auto;">
-                            <div class="text-center text-muted py-3">
-                                <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
-                                <span class="ms-2 small">Loading...</span>
-                            </div>
-                        </div>
-                    </ul>
-                </li>
-
-                <li class="nav-item dropdown">
+                <li class="nav-item dropdown me-1">
                     <a class="nav-link dropdown-toggle d-flex align-items-center gap-2" href="#" data-bs-toggle="dropdown">
+                        {% with profile=user.profile %}
+                        {% if profile.photo %}
+                        <img src="{{ profile.photo.url }}" class="avatar-sm" style="object-fit:cover;" alt="">
+                        {% else %}
                         <div class="avatar-sm">{{ user.first_name|first|upper }}{{ user.last_name|first|upper }}</div>
+                        {% endif %}
+                        {% endwith %}
                         <span>{{ user.first_name }}</span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end shadow border-0">
@@ -225,16 +151,24 @@
                             <div class="px-3 py-2 border-bottom" style="border-color:var(--es-border)!important;">
                                 <small class="text-muted d-block">Signed in as</small>
                                 <span class="fw-semibold small text-white">{{ user.first_name }} {{ user.last_name }}</span>
-                                <span class="badge ms-1" style="font-size:0.6rem;background:rgba(108,61,225,0.3);color:#a78bfa;">{% with profile=user.profile %}{{ profile.role|title }}{% endwith %}</span>
+                                <span class="badge ms-1" style="font-size:0.6rem;background:rgba(108,61,225,0.3);color:#a78bfa;">
+                    {% if user.is_staff or user.is_superuser %}
+                        Admin
+                    {% else %}
+                        {% with profile=user.profile %}{{ profile.role|title }}{% endwith %}
+                    {% endif %}
+                </span>
                             </div>
                         </li>
                         <li><a class="dropdown-item" href="{% url 'profile' %}"><i class="bi bi-person me-2"></i>My Profile</a></li>
-                        <li><a class="dropdown-item" href="{% url 'my_tickets' %}"><i class="bi bi-ticket-perforated me-2"></i>My Tickets</a></li>
-                        <li><a class="dropdown-item" href="{% url 'my_events' %}"><i class="bi bi-calendar-check me-2"></i>My Events</a></li>
                         {% with profile=user.profile %}
-                        {% if profile.role == 'organizer' or user.is_staff %}
+                        {% if profile.role == 'organizer' %}
+                        <li><a class="dropdown-item" href="{% url 'my_events' %}"><i class="bi bi-calendar-check me-2"></i>My Events</a></li>
+                        <li><a class="dropdown-item" href="{% url 'my_tickets' %}"><i class="bi bi-ticket-perforated me-2"></i>My Tickets</a></li>
                         <li><hr class="dropdown-divider"></li>
                         <li><a class="dropdown-item" href="{% url 'event_create' %}"><i class="bi bi-plus-circle me-2"></i>Post New Event</a></li>
+                        {% else %}
+                        <li><a class="dropdown-item" href="{% url 'my_tickets' %}"><i class="bi bi-ticket-perforated me-2"></i>My Tickets</a></li>
                         {% endif %}
                         {% endwith %}
                         <li><hr class="dropdown-divider"></li>
@@ -246,13 +180,53 @@
                     <a class="nav-link" href="{% url 'login' %}">Login</a>
                 </li>
                 <li class="nav-item">
-                    <a class="btn btn-warning btn-sm px-3 fw-semibold ms-2" href="{% url 'register' %}">Join Free</a>
+<a class="btn btn-sm px-3 fw-semibold ms-2 join-free-btn" style="color: white !important;" href="{% url 'register' %}">Join Free</a>                {% endif %}
+                <li class="nav-item">
+                    <button class="theme-toggle border-0" id="themeToggle" title="Toggle light/dark mode">
+                        <i class="bi bi-moon-stars-fill" id="themeIcon"></i>
+                    </button>
                 </li>
-                {% endif %}
             </ul>
+            {% endif %}
         </div>
     </div>
 </nav>
+
+<!-- Search & Filter Panel -->
+<div class="container mt-3" id="searchPanel" style="display: none;">
+    <div class="card shadow">
+        <div class="card-body">
+            <form id="navFilterForm" method="get" action="{% url 'event_list' %}">
+                <div class="row g-3">
+                    <div class="col-lg-5">
+                        <div class="input-group">
+                            <span class="input-group-text"><i class="bi bi-search"></i></span>
+                            <input type="text" name="q" value="{{ query }}" class="form-control" placeholder="Search events, cities, topics...">
+                        </div>
+                    </div>
+                    <div class="col-lg-3">
+                        <select name="category" class="form-select">
+                            <option value="">All Categories</option>
+                            {% for val, label in categories %}
+                            <option value="{{ val }}" {% if category == val %}selected{% endif %}>{{ label }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-lg-2">
+                        <select name="type" class="form-select">
+                            <option value="">All Events</option>
+                            <option value="live" {% if event_type == 'live' %}selected{% endif %}>Live Events</option>
+                        </select>
+                    </div>
+                    <div class="col-lg-2 d-flex gap-2">
+                        <button type="submit" class="btn btn-primary w-50">Filter</button>
+                        <button type="button" class="btn btn-secondary w-50" id="closeSearchBtn">Close</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
 {% if messages %}
 <div class="container mt-3">
@@ -282,7 +256,9 @@
                 <h6 class="text-white fw-semibold mb-3">Explore</h6>
                 <ul class="list-unstyled small">
                     <li><a href="{% url 'event_list' %}" class="footer-link">Browse Events</a></li>
+                    {% if not user.is_authenticated or user.profile.role == 'organizer' %}
                     <li><a href="{% url 'event_create' %}" class="footer-link">Create Event</a></li>
+                    {% endif %}
                     <li><a href="{% url 'attendees_list' %}" class="footer-link">Attendees</a></li>
                 </ul>
             </div>
@@ -315,838 +291,31 @@
     </div>
 </footer>
 
-    <!-- ── SOCIAL COMMENT MODAL (Facebook/Instagram Style) ── -->
-    <div class="modal fade modal-social" id="commentSocialModal" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-body">
-                    <!-- Left: Image Preview -->
-                    <div class="event-preview-side">
-                        <img id="modalEventBanner" src="" class="img-fluid w-100 h-100" style="object-fit: contain;" alt="">
-                    </div>
-                    
-                    <!-- Right: Comments Section -->
-                    <div class="comments-side">
-                        <!-- Header -->
-                        <div class="comments-header">
-                            <div class="d-flex align-items-center gap-2">
-                                <div class="avatar-sm" style="width:32px;height:32px;font-size:0.8rem;">E</div>
-                                <div>
-                                    <div id="modalEventTitle" class="fw-bold text-white small d-none d-lg-block">Event Title</div>
-                                    <div id="modalEventTitleMobile" class="fw-bold text-white small d-lg-none">Event Title</div>
-                                    <small class="text-muted" style="font-size:0.7rem;">Organizer</small>
-                                </div>
-                            </div>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-
-                        <!-- List -->
-                        <div id="modalCommentsContainer" class="comments-list">
-                            <!-- Comments will be injected here -->
-                        </div>
-
-                        <!-- Footer / Input -->
-                        <div class="comments-footer">
-                            <div class="d-flex gap-4 mb-3 px-1">
-                                <div class="text-white small"><i class="bi bi-heart me-1"></i><span id="modalLikeCount">0</span></div>
-                                <div class="text-white small"><i class="bi bi-chat me-1"></i><span id="modalCommentCount">0</span></div>
-                            </div>
-                            <div id="modalCommentsLoader" class="text-center py-2 d-none">
-                                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                            </div>
-                            <div class="comment-input-wrapper">
-                                <input type="text" id="modalCommentInput" placeholder="Add a comment..." autocomplete="off">
-                                <button class="btn-post" id="modalPostBtn">Post</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="{% static 'js/main.js' %}"></script>
-
-<!-- ── EventSathi Shared AJAX JS Script ── -->
 <script>
-// CSRF Token Helper
-function getCookie(name) {
-    let cookieValue = null;
-    if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                break;
-            }
-        }
-    }
-    return cookieValue;
-}
+    // Toggle search panel
+    document.addEventListener('DOMContentLoaded', function() {
+        const desktopBtn = document.getElementById('desktopSearchBtn');
+        const mobileBtn = document.getElementById('mobileSearchBtn');
+        const searchPanel = document.getElementById('searchPanel');
+        const closeBtn = document.getElementById('closeSearchBtn');
 
-// Collapsible Text Toggler
-function toggleReadMore(event, eventId) {
-    event.preventDefault();
-    const descDiv = document.getElementById('desc-' + eventId);
-    const shortDesc = descDiv.querySelector('.short-desc');
-    const fullDesc = descDiv.querySelector('.full-desc');
-    const btn = event.target;
-    
-    if (fullDesc.classList.contains('d-none')) {
-        fullDesc.classList.remove('d-none');
-        shortDesc.classList.add('d-none');
-        btn.textContent = 'Show Less';
-    } else {
-        fullDesc.classList.add('d-none');
-        shortDesc.classList.remove('d-none');
-        btn.textContent = 'Read More';
-    }
-}
+        // Show search panel
+        function showSearch() {
+            searchPanel.style.display = 'block';
+        }
 
-// AJAX Like Action
-function likeEvent(eventId) {
-    {% if not user.is_authenticated %}
-    window.location.href = "{% url 'login' %}?next=" + window.location.pathname;
-    return;
-    {% endif %}
-    
-    const url = `/events/ajax/${eventId}/like/`;
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
+        // Hide search panel
+        function hideSearch() {
+            searchPanel.style.display = 'none';
         }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            // Update all like icons/text/counts on the page (card + detail page)
-            document.querySelectorAll('[id^="like-icon-' + eventId + '"]').forEach(el => {
-                el.className = data.is_liked ? 'bi bi-hand-thumbs-up-fill text-warning fs-6' : 'bi bi-hand-thumbs-up fs-6';
-            });
-            document.querySelectorAll('[id^="like-text-' + eventId + '"]').forEach(el => {
-                el.className = data.is_liked ? 'text-warning' : '';
-            });
-            document.querySelectorAll('[id^="like-count-' + eventId + '"]').forEach(el => {
-                el.textContent = data.likes_count;
-            });
-            showGlobalToast(data.is_liked ? '👍 Event liked!' : 'Like removed.');
-        }
-    })
-    .catch(err => console.error('Like error:', err));
-}
 
-// AJAX Bookmark Save Action
-function toggleSaveEvent(event, eventId) {
-    if (event) event.preventDefault();
-    {% if not user.is_authenticated %}
-    window.location.href = "{% url 'login' %}?next=" + window.location.pathname;
-    return;
-    {% endif %}
-    
-    const url = `/events/ajax/${eventId}/save/`;
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            // Update 3-dot bookmark icon
-            const saveIcon = document.getElementById('save-icon-' + eventId);
-            const saveText = document.getElementById('save-text-' + eventId);
-            if (saveIcon) {
-                saveIcon.className = data.is_saved ? 'bi bi-bookmark-fill text-primary' : 'bi bi-bookmark';
-            }
-            if (saveText) {
-                saveText.textContent = data.is_saved ? 'Unsave Event' : 'Save Event';
-            }
-            
-            // Update bottom save button
-            const saveBtnIcon = document.getElementById('save-icon-btn-' + eventId);
-            const saveBtnText = document.getElementById('save-btn-text-' + eventId);
-            if (saveBtnIcon) {
-                saveBtnIcon.className = data.is_saved ? 'bi bi-bookmark-fill text-primary fs-6' : 'bi bi-bookmark fs-6';
-            }
-            if (saveBtnText) {
-                saveBtnText.className = data.is_saved ? 'text-primary' : '';
-            }
-            
-            showGlobalToast(data.message);
-        }
-    })
-    .catch(err => console.error('Save error:', err));
-}
-
-// AJAX Interest Selection Action
-function setEventInterest(event, eventId, interestType) {
-    if (event) event.preventDefault();
-    {% if not user.is_authenticated %}
-    window.location.href = "{% url 'login' %}?next=" + window.location.pathname;
-    return;
-    {% endif %}
-    
-    const url = `/events/ajax/${eventId}/interest/`;
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ interest: interestType })
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            showGlobalToast(data.message);
-            
-            // Update interest count
-            const intCountSpan = document.getElementById('interest-count-' + eventId);
-            if (intCountSpan && data.interested_count !== undefined) {
-                intCountSpan.textContent = data.interested_count;
-            }
-            
-            if (interestType === 'not_interested') {
-                hidePostCard(eventId);
-            }
-        }
-    })
-    .catch(err => console.error('Interest error:', err));
-}
-
-// AJAX Organizer Follow Action
-function toggleOrganizerFollow(event, organizerId, btnId) {
-    if (event) event.preventDefault();
-    {% if not user.is_authenticated %}
-    window.location.href = "{% url 'login' %}?next=" + window.location.pathname;
-    return;
-    {% endif %}
-    
-    const url = `/events/ajax/organizer/${organizerId}/follow/`;
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const btn = document.getElementById(btnId);
-            if (btn) {
-                if (data.is_following) {
-                    btn.className = 'btn btn-outline-light px-4 py-2 fw-semibold';
-                    btn.innerHTML = '<i class="bi bi-person-check-fill me-2"></i>Following';
-                } else {
-                    btn.className = 'btn btn-warning px-4 py-2 fw-bold text-dark';
-                    btn.innerHTML = '<i class="bi bi-person-plus-fill me-2"></i>Follow';
-                }
-            }
-            
-            const followersCountSpan = document.getElementById('org-followers-count');
-            if (followersCountSpan) {
-                followersCountSpan.textContent = data.followers_count;
-            }
-            
-            showGlobalToast(data.message);
-        }
-    })
-    .catch(err => console.error('Follow error:', err));
-}
-
-// AJAX Pin Organizer Event Action
-function togglePinEvent(event, eventId) {
-    if (event) event.preventDefault();
-    
-    const url = `/events/ajax/events/${eventId}/pin/`;
-    fetch(url, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const pinIcon = document.getElementById('pin-icon-' + eventId);
-            const pinText = document.getElementById('pin-text-' + eventId);
-            const pinnedBadge = document.getElementById('pinned-badge-' + eventId);
-            
-            if (data.is_pinned) {
-                if (pinIcon) pinIcon.className = 'bi bi-pin-angle-fill text-warning';
-                if (pinText) pinText.textContent = 'Unpin from Top';
-                if (pinnedBadge) pinnedBadge.classList.remove('d-none');
-            } else {
-                if (pinIcon) pinIcon.className = 'bi bi-pin-angle';
-                if (pinText) pinText.textContent = 'Pin to Top';
-                if (pinnedBadge) pinnedBadge.classList.add('d-none');
-            }
-            showGlobalToast(data.message);
-        }
-    })
-    .catch(err => console.error('Pin error:', err));
-}
-
-// Hide Card Post immediately
-function hidePostCard(eventId) {
-    const card = document.getElementById('event-card-' + eventId);
-    if (card) {
-        card.style.transition = 'opacity 0.4s ease, transform 0.4s ease';
-        card.style.opacity = '0';
-        card.style.transform = 'scale(0.9)';
-        setTimeout(() => {
-            card.remove();
-        }, 400);
-    }
-}
-
-// Copy event link
-function copyEventLink(event, slug) {
-    if (event) event.preventDefault();
-    const link = window.location.origin + '/events/' + slug + '/';
-    navigator.clipboard.writeText(link).then(() => {
-        showGlobalToast('✓ Event link copied to clipboard!');
+        if (desktopBtn) desktopBtn.addEventListener('click', showSearch);
+        if (mobileBtn) mobileBtn.addEventListener('click', showSearch);
+        if (closeBtn) closeBtn.addEventListener('click', hideSearch);
     });
-}
-
-// Share event trigger
-function shareEvent(event, title, slug) {
-    if (event) event.preventDefault();
-    const link = window.location.origin + '/events/' + slug + '/';
-    if (navigator.share) {
-        navigator.share({
-            title: title,
-            url: link
-        }).catch(err => console.error(err));
-    } else {
-        copyEventLink(null, slug);
-    }
-}
-
-// AJAX Collapsible Comments Drawer Actions
-function toggleCommentDrawer(eventId) {
-    const drawer = document.getElementById('comment-drawer-' + eventId);
-    if (!drawer) return;
-    
-    if (drawer.classList.contains('d-none')) {
-        drawer.classList.remove('d-none');
-        loadComments(eventId);
-    } else {
-        drawer.classList.add('d-none');
-    }
-}
-
-// Load comments from backend via dedicated AJAX endpoint
-function loadComments(eventId) {
-    const container = document.getElementById('comments-container-' + eventId);
-    const loading = document.getElementById('comments-loading-' + eventId);
-    if (!container) return;
-    
-    container.innerHTML = '';
-    if (loading) loading.classList.remove('d-none');
-    
-    fetch(`/events/ajax/${eventId}/comments/`)
-    .then(res => res.json())
-    .then(data => {
-        if (loading) loading.classList.add('d-none');
-        
-        if (data.status === 'success') {
-            const comments = data.comments || [];
-            if (comments.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted small py-2">No comments yet. Be the first to reply!</div>';
-                return;
-            }
-            
-            comments.forEach(c => {
-                const avatarHtml = c.photo 
-                    ? `<img src="${c.photo}" class="rounded-circle" style="width:28px; height:28px; object-fit:cover;" alt="">`
-                    : `<div class="avatar-sm d-flex align-items-center justify-content-center text-white fw-bold" style="width:28px; height:28px; font-size:0.7rem;">${c.initials || c.username.substring(0, 2).toUpperCase()}</div>`;
-                
-                const timeAgo = formatTimeAgo(c.created_at);
-                const commentHtml = `
-                    <div class="d-flex gap-2 mb-2 comment-node">
-                        ${avatarHtml}
-                        <div class="flex-grow-1">
-                            <div class="d-flex align-items-center justify-content-between">
-                                <span class="fw-bold text-white small" style="font-size:0.8rem;">${c.username}</span>
-                                <small class="text-muted" style="font-size:0.65rem;">${timeAgo}</small>
-                            </div>
-                            <p class="text-muted small mb-0 mt-0.5" style="font-size:0.8rem; line-height:1.4;">${c.content}</p>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', commentHtml);
-            });
-            
-            // Update comment count on card
-            const commentCountSpan = document.getElementById('comment-count-' + eventId);
-            if (commentCountSpan) commentCountSpan.textContent = data.count;
-        }
-    })
-    .catch(err => {
-        if (loading) loading.classList.add('d-none');
-        container.innerHTML = '<div class="text-center text-danger small py-2">Failed to load comments.</div>';
-        console.error(err);
-    });
-}
-
-// Post comment to backend via AJAX
-function postComment(eventId) {
-    const input = document.getElementById('comment-input-' + eventId);
-    if (!input) return;
-    
-    const content = input.value.trim();
-    if (!content) return;
-    
-    // Disable send button while posting
-    input.disabled = true;
-    
-    fetch(`/events/ajax/${eventId}/comment/post/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ content: content })
-    })
-    .then(res => res.json())
-    .then(data => {
-        input.disabled = false;
-        if (data.status === 'success') {
-            input.value = '';
-            
-            // Update comments count everywhere
-            document.querySelectorAll('[id^="comment-count-' + eventId + '"]').forEach(el => {
-                el.textContent = data.comments_count;
-            });
-            
-            // Reload comment list
-            loadComments(eventId);
-            showGlobalToast('💬 Comment posted!');
-        } else {
-            showGlobalToast(data.message || 'Failed to post comment.');
-        }
-    })
-    .catch(err => {
-        input.disabled = false;
-        console.error('Post comment error:', err);
-    });
-}
-
-// Time-ago formatter utility
-function formatTimeAgo(dateStr) {
-    const now = new Date();
-    const date = new Date(dateStr);
-    const diff = Math.floor((now - date) / 1000);
-    if (diff < 60) return 'just now';
-    if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-    if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-    if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-    return date.toLocaleDateString();
-}
-
-// ── Notifications Tray AJAX Operations ──
-
-function fetchNavbarNotifications() {
-    {% if not user.is_authenticated %}
-    return;
-    {% endif %}
-    
-    const container = document.getElementById('notificationItemsContainer');
-    container.innerHTML = `
-        <div class="text-center text-muted py-3">
-            <div class="spinner-border spinner-border-sm text-warning" role="status"></div>
-            <span class="ms-2 small">Loading...</span>
-        </div>
-    `;
-    
-    fetch('/api/notifications/')
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const badge = document.getElementById('notificationBadge');
-            if (data.unread_count > 0) {
-                badge.textContent = data.unread_count;
-                badge.classList.remove('d-none');
-            } else {
-                badge.classList.add('d-none');
-            }
-            
-            container.innerHTML = '';
-            const list = data.notifications;
-            if (list.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted small py-3">No new notifications</div>';
-                return;
-            }
-            
-            list.forEach(n => {
-                let iconClass = 'bi-bell-fill text-warning';
-                if (n.notification_type === 'booking') iconClass = 'bi-ticket-perforated-fill text-success';
-                else if (n.notification_type === 'like') iconClass = 'bi-hand-thumbs-up-fill text-primary';
-                else if (n.notification_type === 'comment') iconClass = 'bi-chat-text-fill text-info';
-                else if (n.notification_type === 'follow') iconClass = 'bi-person-plus-fill text-danger';
-                else if (n.notification_type === 'message') iconClass = 'bi-chat-dots-fill text-warning';
-                
-                const highlightBg = n.is_read ? '' : 'style="background:rgba(249,115,22,0.03);"';
-                
-                const itemHtml = `
-                    <div class="px-3 py-2 border-bottom d-flex align-items-start gap-2.5 notification-item" ${highlightBg} onclick="clickNotificationItem(event, ${n.id}, ${n.related_id}, '${n.notification_type}')" style="cursor:pointer; border-color:var(--es-border)!important; transition:background 0.2s;">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center bg-dark p-2 mt-0.5" style="width:30px; height:30px; flex-shrink:0;">
-                            <i class="bi ${iconClass}" style="font-size:0.9rem;"></i>
-                        </div>
-                        <div class="flex-grow-1 overflow-hidden">
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="fw-bold text-white small text-truncate" style="font-size:0.8rem;">${n.title}</span>
-                                ${!n.is_read ? '<span class="rounded-circle bg-warning" style="width:6px; height:6px;"></span>' : ''}
-                            </div>
-                            <p class="text-muted mb-0 small text-truncate" style="font-size:0.75rem;">${n.content}</p>
-                            <small class="text-secondary" style="font-size:0.6rem;">${new Date(n.created_at).toLocaleTimeString()}</small>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('beforeend', itemHtml);
-            });
-        }
-    })
-    .catch(err => console.error(err));
-}
-
-function clickNotificationItem(event, notificationId, relatedId, type) {
-    if (event) event.preventDefault();
-    
-    // Mark as read
-    fetch(`/api/notifications/${notificationId}/read/`, {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            // Redirect based on type
-            if (relatedId) {
-                if (type === 'booking') {
-                    window.location.href = '/events/ticket/' + relatedId + '/';
-                } else if (type === 'message') {
-                    window.location.href = '/accounts/messages/' + relatedId + '/';
-                } else if (type === 'like' || type === 'comment') {
-                    // Fetch event slug and redirect
-                    fetch(`/api/events/${relatedId}/`)
-                    .then(res => res.json())
-                    .then(resData => {
-                        if (resData.status === 'success' && resData.event) {
-                            window.location.href = '/events/' + resData.event.slug + '/';
-                        }
-                    });
-                } else {
-                    window.location.href = '/events/';
-                }
-            } else {
-                window.location.reload();
-            }
-        }
-    })
-    .catch(err => console.error(err));
-}
-
-function markAllNotificationsAsRead(event) {
-    if (event) {
-        event.preventDefault();
-        event.stopPropagation();
-    }
-    
-    fetch('/api/notifications/read-all/', {
-        method: 'POST',
-        headers: {
-            'X-CSRFToken': getCookie('csrftoken'),
-            'Content-Type': 'application/json'
-        }
-    })
-    .then(res => res.json())
-    .then(data => {
-        if (data.status === 'success') {
-            const badge = document.getElementById('notificationBadge');
-            if (badge) badge.classList.add('d-none');
-            showGlobalToast('All notifications marked as read.');
-            fetchNavbarNotifications();
-        }
-    })
-    .catch(err => console.error(err));
-}
-
-// Global Custom Toast Notification popup
-function showGlobalToast(message) {
-    let toast = document.getElementById('global-toast');
-    if (!toast) {
-        const toastHtml = `
-            <div id="global-toast" class="position-fixed bottom-0 start-50 translate-middle-x mb-4 px-4 py-2.5 text-white shadow-lg rounded-pill d-none" style="background:#ea580c; z-index:9999; font-size:0.85rem; font-weight:600; box-shadow:0 10px 30px rgba(234,88,12,0.3); transition:all 0.3s ease;">
-                <span id="global-toast-msg"></span>
-            </div>
-        `;
-        document.body.insertAdjacentHTML('beforeend', toastHtml);
-        toast = document.getElementById('global-toast');
-    }
-    
-    document.getElementById('global-toast-msg').textContent = message;
-    toast.classList.remove('d-none');
-    toast.style.opacity = '1';
-    
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => {
-            toast.classList.add('d-none');
-        }, 300);
-    }, 2800);
-}
-
-// Autoloader count notifications and geolocation on page load
-document.addEventListener('DOMContentLoaded', () => {
-    {% if user.is_authenticated %}
-    fetchNavbarNotifications();
-    setInterval(fetchNavbarNotifications, 15000); // refresh every 15 seconds
-    {% endif %}
-
-    // Geolocation trigger for proximity event sorting
-    if (navigator.geolocation && !getCookie('user_lat')) {
-        navigator.geolocation.getCurrentPosition(position => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
-            // Set session cookies expiring in 1 day
-            document.cookie = `user_lat=${lat}; path=/; max-age=86400; SameSite=Lax`;
-            document.cookie = `user_lng=${lng}; path=/; max-age=86400; SameSite=Lax`;
-            
-            // Reload page if currently viewing the events browse screen
-            if (window.location.pathname === '/events/' || window.location.pathname === '/') {
-                window.location.reload();
-            }
-        }, err => {
-            console.warn('Geolocation failed:', err.message);
-        });
-    }
-
-    // ── API Connection Health Indicator Logic ──
-    const checkApiHealth = () => {
-        const circle = document.getElementById('connectionCircle');
-        const indicator = document.getElementById('apiConnectionIndicator');
-        
-        fetch('/api/health/')
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    circle.style.backgroundColor = '#22c55e'; // Green
-                    indicator.title = 'API Connected Successfully';
-                } else {
-                    circle.style.backgroundColor = '#ef4444'; // Red
-                    indicator.title = 'API Server Error';
-                }
-            })
-            .catch(err => {
-                circle.style.backgroundColor = '#ef4444'; // Red
-                indicator.title = 'API Offline / Connection Lost';
-            });
-    };
-
-    // Initial check and periodic health check
-    checkApiHealth();
-    setInterval(checkApiHealth, 30000); // Check every 30 seconds
-
-    // ── Real-Time WebSockets Logic ──
-    {% if user.is_authenticated %}
-    const setupWebSockets = () => {
-        const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-        const host = window.location.host;
-        
-        // Notifications WebSocket
-        const notificationSocket = new WebSocket(`${protocol}${host}/ws/notifications/`);
-        
-        notificationSocket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            if (data.type === 'send_notification') {
-                showGlobalToast(`🔔 ${data.notification.title}`);
-                fetchNavbarNotifications(); // Refresh the tray
-            }
-        };
-
-        notificationSocket.onclose = (e) => {
-            console.warn('Notification socket closed unexpectedly. Reconnecting...');
-            setTimeout(setupWebSockets, 5000);
-        };
-
-        // Events Feed WebSocket (Global Sync)
-        const eventSocket = new WebSocket(`${protocol}${host}/ws/events/`);
-        
-        eventSocket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            if (data.type === 'event_update') {
-                const eventId = data.event_id;
-                
-                if (data.action === 'deleted') {
-                    hidePostCard(eventId);
-                    showGlobalToast(`ℹ️ An event was removed.`);
-                } else if (data.action === 'updated' || data.action === 'created') {
-                    // Update likes/bookings count if card exists
-                    const likeCountEl = document.getElementById(`like-count-${eventId}`);
-                    if (likeCountEl && data.total_likes !== undefined) {
-                        likeCountEl.textContent = data.total_likes;
-                    }
-                    const bookingCountEl = document.getElementById(`booking-count-${eventId}`);
-                    if (bookingCountEl && data.total_bookings !== undefined) {
-                        bookingCountEl.textContent = data.total_bookings;
-                    }
-                } else if (data.action === 'comment_added') {
-                    // Update comment count
-                    const commentCountEl = document.getElementById(`comment-count-${eventId}`);
-                    if (commentCountEl && data.comments_count !== undefined) {
-                        commentCountEl.textContent = data.comments_count;
-                    }
-                    // If modal is open for this event, append the comment
-                    if (typeof activeEventId !== 'undefined' && activeEventId == eventId) {
-                        renderModalComments([data.comment], true); // true means append/prepend
-                    }
-                }
-            }
-        };
-
-        // Chat WebSocket
-        const chatSocket = new WebSocket(`${protocol}${host}/ws/chat/`);
-        chatSocket.onmessage = (e) => {
-            const data = JSON.parse(e.data);
-            if (data.type === 'chat_message') {
-                showGlobalToast(`💬 New message from ${data.message.sender_name}`);
-                // If on chat page, update UI (trigger custom event)
-                window.dispatchEvent(new CustomEvent('new-message', { detail: data.message }));
-            }
-        };
-    };
-    
-    setupWebSockets();
-    {% endif %}
-
-    // ── SOCIAL COMMENT MODAL LOGIC ──
-    let activeEventId = null;
-    const commentModal = new bootstrap.Modal(document.getElementById('commentSocialModal'));
-
-    window.openCommentModal = function(eventId, title, bannerUrl) {
-        activeEventId = eventId;
-        document.getElementById('modalEventTitle').textContent = title;
-        document.getElementById('modalEventTitleMobile').textContent = title;
-        document.getElementById('modalEventBanner').src = bannerUrl || 'https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?auto=format&fit=crop&w=800&q=80';
-        
-        // Show loader, clear container
-        document.getElementById('modalCommentsLoader').classList.remove('d-none');
-        document.getElementById('modalCommentsContainer').innerHTML = '';
-        
-        commentModal.show();
-        
-        // Fetch comments via API
-        fetch(`/api/events/${eventId}/comments/`)
-        .then(res => res.json())
-        .then(data => {
-            document.getElementById('modalCommentsLoader').classList.add('d-none');
-            if (data.status === 'success') {
-                document.getElementById('modalLikeCount').textContent = data.likes_count || 0;
-                document.getElementById('modalCommentCount').textContent = data.comments_count || 0;
-                renderModalComments(data.comments);
-            }
-        });
-    };
-
-    function renderModalComments(comments) {
-        const container = document.getElementById('modalCommentsContainer');
-        container.innerHTML = '';
-        if (comments.length === 0) {
-            container.innerHTML = '<div class="text-center py-5 text-muted small">No comments yet. Be the first to share your thoughts!</div>';
-            return;
-        }
-        comments.forEach(c => {
-            const html = `
-                <div class="d-flex gap-3">
-                    <div class="avatar-sm flex-shrink-0" style="width:32px; height:32px; font-size:0.8rem;">
-                        ${(c.username || 'U').charAt(0).toUpperCase()}
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="bg-dark p-3 rounded-4" style="border:1px solid rgba(255,255,255,0.05);">
-                            <div class="fw-bold text-white small mb-1">${c.username}</div>
-                            <div class="text-white-50 small">${c.content}</div>
-                        </div>
-                        <div class="d-flex gap-3 mt-1 ms-2" style="font-size:0.7rem;">
-                            <span class="text-muted">${new Date(c.created_at).toLocaleDateString()}</span>
-                            <a href="#" class="text-muted text-decoration-none fw-bold">Reply</a>
-                        </div>
-                    </div>
-                </div>
-            `;
-            container.insertAdjacentHTML('beforeend', html);
-        });
-    }
-
-    document.getElementById('modalPostBtn')?.addEventListener('click', function() {
-        const input = document.getElementById('modalCommentInput');
-        const content = input.value.trim();
-        if (!content || !activeEventId) return;
-
-        this.disabled = true;
-        fetch(`/api/events/${activeEventId}/comment/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ content: content })
-        })
-        .then(res => res.json())
-        .then(data => {
-            this.disabled = false;
-            if (data.status === 'success') {
-                input.value = '';
-                // Prepend new comment
-                const container = document.getElementById('modalCommentsContainer');
-                if (container.querySelector('.text-center')) container.innerHTML = '';
-                
-                const c = data.comment;
-                const html = `
-                    <div class="d-flex gap-3 fade-in">
-                        <div class="avatar-sm flex-shrink-0" style="width:32px; height:32px; font-size:0.8rem;">
-                            ${(c.username || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="bg-dark p-3 rounded-4" style="border:1px solid rgba(255,255,255,0.05);">
-                                <div class="fw-bold text-white small mb-1">${c.username}</div>
-                                <div class="text-white-50 small">${c.content}</div>
-                            </div>
-                            <div class="d-flex gap-3 mt-1 ms-2" style="font-size:0.7rem;">
-                                <span class="text-muted">Just now</span>
-                                <a href="#" class="text-muted text-decoration-none fw-bold">Reply</a>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                container.insertAdjacentHTML('afterbegin', html);
-                
-                // Update counts
-                const countElem = document.getElementById('modalCommentCount');
-                countElem.textContent = parseInt(countElem.textContent) + 1;
-                
-                // Update count on card
-                const cardCount = document.getElementById(`comment-count-${activeEventId}`);
-                if (cardCount) cardCount.textContent = parseInt(cardCount.textContent) + 1;
-            }
-        });
-    });
-
-});
 </script>
-
 {% block extra_js %}{% endblock %}
 </body>
 </html>

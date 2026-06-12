@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block title %}Register - {{ event.title }}{% endblock %}
 
 {% block content %}
@@ -22,7 +23,7 @@
                         <div class="d-flex justify-content-between align-items-start mb-2">
                             <h5 class="fw-bold mb-0">{{ tier.name }}</h5>
                             <div class="fw-bold fs-5 {% if tier.price == 0 %}text-success{% else %}text-warning{% endif %}">
-                                {% if tier.price == 0 %}FREE{% else %}₹{{ tier.price|floatformat:0 }}{% endif %}
+                                {% if tier.price == 0 %}FREE{% else %}Rs{{ tier.price|floatformat:0 }}{% endif %}
                             </div>
                         </div>
                         {% if tier.description %}
@@ -37,7 +38,7 @@
                         {% endif %}
                         <div class="d-flex justify-content-between align-items-center">
                             <small class="text-muted">
-                                {% if tier.get_available > 0 %}{{ tier.get_available }} seats available{% else %}<span class="text-danger">Sold out</span>{% endif %}
+                                {% if tier.get_available > 0 %}{{ tier.get_available }} seats available{% endif %}
                             </small>
                             <div class="check-icon" id="check_{{ tier.id }}" style="display:{% if forloop.first %}flex{% else %}none{% endif %};width:24px;height:24px;background:var(--es-primary);border-radius:50%;align-items:center;justify-content:center;">
                                 <i class="bi bi-check text-white" style="font-size:0.8rem;"></i>
@@ -62,6 +63,27 @@
             </div>
         </div>
 
+        <!-- Payment Method Selection (only for paid tiers) -->
+        <div class="card p-4 mb-4" id="payment-method-section" style="display:none;">
+            <h6 class="fw-bold mb-3">Payment Method</h6>
+            <div class="row g-3">
+                <div class="col-md-12">
+                    <label class="d-block" style="cursor:pointer;">
+                        <input type="hidden" name="payment_method" value="esewa">
+                        <div class="card p-3 payment-option" style="border:2px solid var(--es-primary);">
+                            <div class="d-flex align-items-center gap-3">
+                                <img src="{% static 'images/esewa.png' %}" alt="eSewa" style="height: 40px; width: auto;">
+                                <div>
+                                    <!-- <div class="fw-semibold" style="color: #4ade80;">eSewa</div> -->
+                                    <small class="text-muted">Pay using eSewa</small>
+                                </div>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </div>
+
         <div class="d-flex gap-3">
             <button type="submit" class="btn btn-primary btn-lg px-5">
                 <i class="bi bi-ticket-perforated me-2"></i>Confirm Registration
@@ -71,7 +93,22 @@
     </form>
 </div>
 
+{{ tiers_data|json_script:"tiers-data" }}
+
 <script>
+let tiers = [];
+document.addEventListener('DOMContentLoaded', function() {
+    const tiersDataScript = document.getElementById('tiers-data');
+    if (tiersDataScript) {
+        tiers = JSON.parse(tiersDataScript.textContent);
+    }
+    
+    // Initialize: Check if first tier is paid
+    if (tiers.length > 0 && tiers[0].price > 0) {
+        document.getElementById('payment-method-section').style.display = 'block';
+    }
+});
+
 function selectTier(tierId) {
     document.querySelectorAll('.tier-option').forEach(el => {
         el.style.borderColor = 'var(--es-border)';
@@ -79,7 +116,22 @@ function selectTier(tierId) {
     document.querySelectorAll('[id^="check_"]').forEach(el => el.style.display = 'none');
     document.getElementById('tier_' + tierId).checked = true;
     document.getElementById('check_' + tierId).style.display = 'flex';
-    event.target?.closest('.tier-option')?.style.setProperty('border-color', 'var(--es-primary)');
+    
+    const clickedTier = event.target.closest('.tier-option');
+    if (clickedTier) {
+        clickedTier.style.borderColor = 'var(--es-primary)';
+    }
+    
+    // Check if selected tier is paid and show/hide payment method section
+    const selectedTier = tiers.find(t => t.id == tierId);
+    const paymentSection = document.getElementById('payment-method-section');
+    if (selectedTier && selectedTier.price > 0) {
+        paymentSection.style.display = 'block';
+    } else {
+        paymentSection.style.display = 'none';
+    }
 }
+
+
 </script>
 {% endblock %}

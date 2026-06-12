@@ -1,22 +1,24 @@
-# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
-
-# compiled output
-dist
-tmp
-out-tsc
-*.tsbuildinfo
-.expo
-.expo-shared
-
-# Python virtual environment
+# Django
 venv/
 env/
-.venv/
-ENV/
-venv.bak/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+*.egg-info/
+dist/
+build/
+db.sqlite3
+db.sqlite3-journal
+media/
+staticfiles/
 
-# dependencies
-node_modules
+# Environment
+.env
+.env.local
+.env.*.local
 
 # IDEs and editors
 /.idea
@@ -26,31 +28,30 @@ node_modules
 *.launch
 .settings/
 *.sublime-workspace
-
-# IDE - VSCode
 .vscode/*
 !.vscode/settings.json
 !.vscode/tasks.json
 !.vscode/launch.json
 !.vscode/extensions.json
 
-# misc
-/.sass-cache
-/connect.lock
-/coverage
-/libpeerconnection.log
-npm-debug.log
-yarn-error.log
-testem.log
-/typings
-
 # System Files
 .DS_Store
 Thumbs.db
 
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
-
-# Replit
-.cache/
-.local/
+# Other unnecessary stuff
+artifacts/
+attached_assets/
+replit.md
+pnpm-lock.yaml
+uv.lock
+pyproject.toml
+package.json
+pnpm-workspace.yaml
+tsconfig.base.json
+tsconfig.json
+main.py
+lib/
+scripts/
+.replit
+.replitignore
+.agents/

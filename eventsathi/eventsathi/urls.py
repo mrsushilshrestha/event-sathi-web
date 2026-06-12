@@ -15,14 +15,24 @@ urlpatterns = [
     path('adminlogin/event/<slug:slug>/change-status/', account_views.admin_event_change_status, name='admin_event_change_status'),
     path('adminlogin/organizer/<int:user_id>/toggle-verification/', account_views.admin_organizer_toggle_verification, name='admin_organizer_toggle_verification'),
     path('adminlogin/organizer/<int:user_id>/delete/', account_views.admin_organizer_delete, name='admin_organizer_delete'),
+    path('adminlogin/user/<int:user_id>/toggle-status/', account_views.admin_user_toggle_status, name='admin_user_toggle_status'),
+    path('adminlogin/user/<int:user_id>/change-role/', account_views.admin_user_change_role, name='admin_user_change_role'),
+    path('adminlogin/user/<int:user_id>/delete/', account_views.admin_user_delete, name='admin_user_delete'),
+    path('adminlogin/user/<int:user_id>/reset-password/', account_views.admin_reset_user_password, name='admin_reset_user_password'),
+    path('adminlogin/admin/add/', account_views.admin_add_admin, name='admin_add_admin'),
+    path('adminlogin/user/add/', account_views.admin_add_user, name='admin_add_user'),
+    path('adminlogin/organizer/add/', account_views.admin_add_organizer, name='admin_add_organizer'),
+
+    # Payment Routes
+    path('payment/esewa/success/', event_views.esewa_payment_success, name='esewa_payment_success'),
+    path('payment/esewa/failure/', event_views.esewa_payment_failure, name='esewa_payment_failure'),
 
     # Original Django admin as fallback/secure utility
     path('sysadmin/', admin.site.urls),
 
     path('accounts/', include('accounts.urls')),
-    path('', event_views.home, name='home'),
+    path('', event_views.event_list, name='home'),
     path('events/', include('events.urls')),
-    path('api/', include('api.urls')),
 ]
 
 if settings.DEBUG:

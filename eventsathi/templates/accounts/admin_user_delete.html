@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Confirm Deletion - {{ target_user.get_full_name|default:target_user.username }}{% endblock %}
+
+{% block content %}
+<div class="container py-5 d-flex align-items-center justify-content-center" style="min-height: 80vh;">
+    <div class="card p-4 shadow-lg border" style="max-width: 550px; width: 100%; background: var(--es-card-bg); border-radius: var(--es-radius); border-color: rgba(239,68,68,0.25)!important;">
+        <div class="text-center mb-4">
+            <div class="d-inline-flex align-items-center justify-content-center mb-3 text-danger" style="width: 60px; height: 60px; border-radius: 12px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25);">
+                <i class="bi bi-exclamation-triangle-fill fs-3"></i>
+            </div>
+            <h4 class="fw-bold text-white mb-1">Administrative Purge Warning</h4>
+            <p class="text-muted small mb-0">Platform-wide permanent user account deletion</p>
+        </div>
+
+        <div class="alert alert-danger p-3 rounded-3 mb-4 small" role="alert" style="background: rgba(239,68,68,0.06); border: 1px solid rgba(239,68,68,0.2); color: #f87171;">
+            <p class="fw-bold mb-2"><i class="bi bi-shield-alert me-2"></i>CRITICAL CONSEQUENCES:</p>
+            <p class="mb-2">You are about to permanently delete the user account: <strong class="text-white">{{ target_user.get_full_name|default:target_user.username }} (@{{ target_user.username }})</strong>.</p>
+            <p class="mb-0">This operation is non-reversible and will cascade, permanently purging the user account and all associated data, including:</p>
+            <ul class="mt-2 mb-0 ps-3">
+                <li>User profile info, contact records, and metadata</li>
+                {% if target_user.is_staff or target_user.is_superuser %}
+                <li>Administrative access privileges</li>
+                {% endif %}
+                <li>All events organized by this user</li>
+                <li>All event registrations and ticket orders made by this user</li>
+                <li>All direct messages, connection requests, and network associations</li>
+            </ul>
+        </div>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if events %}
+            <div class="p-3 mb-3 rounded-3 border text-start" style="background: rgba(255,255,255,0.015); border-color: var(--es-border); max-height: 150px; overflow-y: auto;">
+                <span class="small text-danger fw-bold d-block mb-2">The following events hosted by this user will be permanently deleted:</span>
+                <ul class="list-unstyled mb-0 small">
+                    {% for event in events %}
+                    <li class="text-white mb-2">
+                        <i class="bi bi-calendar-event me-2 text-warning"></i>{{ event.title }} 
+                        <span class="badge badge-status-{{ event.status }} ms-1" style="font-size:0.65rem;">{{ event.get_status_display }}</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if registrations %}
+            <div class="p-3 mb-4 rounded-3 border text-start" style="background: rgba(255,255,255,0.015); border-color: var(--es-border); max-height: 150px; overflow-y: auto;">
+                <span class="small text-warning fw-bold d-block mb-2">The following event registrations will be permanently deleted:</span>
+                <ul class="list-unstyled mb-0 small">
+                    {% for reg in registrations %}
+                    <li class="text-white mb-2">
+                        <i class="bi bi-ticket-perforated me-2 text-info"></i>{{ reg.event.title }}
+                        <span class="text-muted">({{ reg.ticket_tier.name }})</span>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+
+            {% if not events and not registrations %}
+            <div class="p-3 mb-4 rounded-3 border text-start text-muted small" style="background: rgba(255,255,255,0.015); border-color: var(--es-border);">
+                <i class="bi bi-info-circle me-1 text-info"></i> This user currently has no listed events or event registrations.
+            </div>
+            {% endif %}
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-danger w-100 py-2.5 fw-bold" style="border-radius: 8px;">
+                    <i class="bi bi-trash3-fill me-2"></i>Confirm Delete
+                </button>
+                <a href="{% url 'admin_dashboard' %}?tab=users" class="btn btn-outline-secondary w-100 py-2.5 small" style="border-radius: 8px;">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -43,7 +43,7 @@ def send_eventsathi_email(subject, message, recipient_list):
         print("="*80 + "\n")
 
 
-from .models import UserProfile, NetworkConnection, Message, EmailVerificationCode
+from .models import UserProfile, NetworkConnection, Message, EmailVerificationCode, PasswordResetCode
 from .forms import RegisterForm, SetRegistrationPasswordForm, LoginForm, ProfileUpdateForm, MessageForm, ForgotPasswordForm, ForceChangePasswordForm
 
 
@@ -91,7 +91,7 @@ def login_view(request):
     form = LoginForm(request, data=request.POST or None)
     if request.method == 'POST' and form.is_valid():
         user = form.get_user()
-        login(request, user)
+        login(request, user, backend='accounts.backends.EmailOrUsernameBackend')
         messages.success(request, f'Welcome back, {user.first_name or user.username}!')
         return redirect(request.GET.get('next', 'home'))
     return render(request, 'accounts/login.html', {'form': form})
@@ -106,29 +106,13 @@ def logout_view(request):
 @login_required
 def profile_view(request):
     profile, created = UserProfile.objects.get_or_create(user=request.user)
-    from events.models import Registration, SavedEvent, EventInterest, Event
-    from django.utils import timezone
-    now = timezone.now()
-
-    # Active/Upcoming & Past Bookings
-    all_registrations = Registration.objects.filter(user=request.user).select_related('event', 'ticket_tier').order_by('-registered_at')
-    registrations = all_registrations.filter(event__end_date__gte=now)
-    past_registrations = all_registrations.filter(event__end_date__lt=now)
-
-    # Saved and Interested
-    saved_events = SavedEvent.objects.filter(user=request.user).select_related('event', 'event__organizer')
-    interested_events = EventInterest.objects.filter(user=request.user, is_interested=True).select_related('event', 'event__organizer')
-
-    # My Posts (Events created by user)
-    my_posts = Event.objects.filter(organizer=request.user).order_by('-created_at')
-
+    from events.models import Registration, FavoriteEvent
+    registrations = Registration.objects.filter(user=request.user).select_related('event', 'ticket_tier').order_by('-registered_at')
+    favorite_events = FavoriteEvent.objects.filter(user=request.user).select_related('event').order_by('-created_at')
     return render(request, 'accounts/profile.html', {
         'profile': profile,
         'registrations': registrations,
-        'past_registrations': past_registrations,
-        'saved_events': saved_events,
-        'interested_events': interested_events,
-        'my_posts': my_posts,
+        'favorite_events': favorite_events,
     })
 
 
@@ -153,11 +137,12 @@ def network_hub(request):
     connected_ids = list(set(list(sent) + list(received_accepted)))
 
     pending_requests = NetworkConnection.objects.filter(to_user=request.user, status='pending').select_related('from_user__profile')
+    pending_ids = pending_requests.values_list('from_user_id', flat=True)
 
     all_profiles = UserProfile.objects.exclude(user=request.user).select_related('user')
     suggestions = []
     for p in all_profiles:
-        if p.user.id not in connected_ids:
+        if p.user.id not in connected_ids and p.user.id not in pending_ids:
             p_interests = p.get_interests_list()
             common = len(set(my_interests) & set(p_interests))
             suggestions.append((p, common))
@@ -328,29 +313,79 @@ def forgot_password_view(request):
         email = form.cleaned_data['email']
         user = User.objects.filter(email=email).first()
         if user:
-            # Generate temporary password
-            from django.utils.crypto import get_random_string
-            temp_pw = get_random_string(length=10)
-            user.set_password(temp_pw)
-            user.save()
+            # Generate password reset OTP
+            code = f"{random.randint(100000, 999999)}"
+            # Delete old codes for this user
+            PasswordResetCode.objects.filter(user=user).delete()
+            PasswordResetCode.objects.create(user=user, code=code)
 
-            # Set must_change_password flag
-            profile, _ = UserProfile.objects.get_or_create(user=user)
-            profile.must_change_password = True
-            profile.save()
-
-            # Send temporary password
+            # Send OTP
             send_eventsathi_email(
-                'Your EventSathi Temporary Password',
-                f'Hi {user.first_name or user.username},\n\nYou requested a password reset. You can log in using the following temporary credentials:\n\nUsername: {user.username}\nTemporary Password: {temp_pw}\n\nNote: You will be required to change this password immediately upon logging in.',
+                'Your EventSathi Password Reset OTP',
+                f'Hi {user.first_name or user.username},\n\nYou requested a password reset. Use the following OTP to reset your password:\n\nOTP: {code}\n\nThis code is valid for a short time.',
                 [user.email],
             )
-            messages.success(request, 'A temporary password has been sent to your email address.')
-            return redirect('login')
+            messages.success(request, 'An OTP has been sent to your email address.')
+            return redirect('reset_password_verify', user_id=user.id)
         else:
             messages.error(request, 'No account found with this email address.')
 
     return render(request, 'accounts/forgot_password.html', {'form': form})
+
+
+def reset_password_verify_view(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        if action == 'resend':
+            # Delete old codes
+            PasswordResetCode.objects.filter(user=user).delete()
+            # Generate new code
+            code = f"{random.randint(100000, 999999)}"
+            PasswordResetCode.objects.create(user=user, code=code)
+            # Send code
+            send_eventsathi_email(
+                'Your EventSathi Password Reset OTP',
+                f'Hi {user.first_name or user.username},\n\nYour new password reset OTP is: {code}',
+                [user.email],
+            )
+            messages.success(request, 'A new OTP has been sent to your email.')
+            return redirect('reset_password_verify', user_id=user.id)
+
+        entered_code = request.POST.get('code', '').strip()
+        code_obj = PasswordResetCode.objects.filter(user=user, code=entered_code).first()
+        if code_obj:
+            # Store user_id in session for next step
+            request.session['reset_user_id'] = user.id
+            return redirect('reset_password_confirm')
+        else:
+            messages.error(request, 'Invalid OTP. Please try again.')
+
+    return render(request, 'accounts/reset_password_verify.html', {'target_user': user})
+
+
+def reset_password_confirm_view(request):
+    user_id = request.session.get('reset_user_id')
+    if not user_id:
+        messages.error(request, 'Please start the password reset process again.')
+        return redirect('forgot_password')
+
+    user = get_object_or_404(User, id=user_id)
+    form = ForceChangePasswordForm(user=user, data=request.POST or None)
+    if request.method == 'POST' and form.is_valid():
+        form.save()
+        # Clear session and reset codes
+        if 'reset_user_id' in request.session:
+            del request.session['reset_user_id']
+        PasswordResetCode.objects.filter(user=user).delete()
+        # Clear must_change_password flag
+        profile, _ = UserProfile.objects.get_or_create(user=user)
+        profile.must_change_password = False
+        profile.save()
+        messages.success(request, 'Your password has been reset successfully. Please log in.')
+        return redirect('login')
+
+    return render(request, 'accounts/reset_password_confirm.html', {'form': form, 'target_user': user})
 
 
 @login_required
@@ -373,7 +408,7 @@ def force_change_password_view(request):
 
 from django.contrib.auth.decorators import user_passes_test
 from django.utils import timezone
-from events.models import Event, Registration, OrganizerFollow
+from events.models import Event, Registration
 from .forms import AdminLoginForm, AdminEventForm
 
 def organizer_profile_view(request, username):
@@ -386,20 +421,11 @@ def organizer_profile_view(request, username):
     upcoming_events = all_events.filter(end_date__gte=now).order_by('start_date')
     past_events = all_events.filter(end_date__lt=now).order_by('-start_date')
     
-    # Follow stats
-    followers_count = organizer.organizer_followers.count()
-    is_following = False
-    if request.user.is_authenticated:
-        is_following = organizer.organizer_followers.filter(user=request.user).exists()
-    
     return render(request, 'accounts/organizer_profile.html', {
         'organizer': organizer,
         'profile': profile,
         'upcoming_events': upcoming_events,
         'past_events': past_events,
-        'all_events': all_events,
-        'followers_count': followers_count,
-        'is_following': is_following,
     })
 
 
@@ -410,7 +436,7 @@ def admin_login_view(request):
     form = AdminLoginForm(request, data=request.POST or None)
     if request.method == 'POST' and form.is_valid():
         user = form.get_user()
-        login(request, user)
+        login(request, user, backend='accounts.backends.EmailOrUsernameBackend')
         messages.success(request, f'Admin session started. Welcome, {user.first_name or user.username}!')
         return redirect('admin_dashboard')
         
@@ -448,21 +474,53 @@ def admin_dashboard_view(request):
             Q(designation__icontains=q)
         )
     organizers = organizers.order_by('-created_at')
+
+    # Fetch users list for new Users tab
+    users = User.objects.all().prefetch_related('profile')
+    if q:
+        users = users.filter(
+            Q(username__icontains=q) |
+            Q(email__icontains=q) |
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q)
+        )
+    users = users.order_by('-date_joined')
     
     # Statistics/Metrics
     total_events = Event.objects.count()
     total_registrations = Registration.objects.filter(status__in=['confirmed', 'checked_in']).count()
     total_users = User.objects.count()
     
+    # Advanced breakdowns
+    total_organizers = UserProfile.objects.filter(role='organizer').count()
+    total_speakers = UserProfile.objects.filter(role='speaker').count()
+    total_attendees = UserProfile.objects.filter(role='attendee').count()
+    total_admins = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).count()
+    admins = User.objects.filter(Q(is_staff=True) | Q(is_superuser=True)).prefetch_related('profile').order_by('-date_joined')
+
+    role_choices = [
+        ('attendee', 'Attendee'),
+        ('organizer', 'Organizer'),
+        ('speaker', 'Speaker'),
+        ('admin', 'Admin')
+    ]
+    
     return render(request, 'accounts/admin_dashboard.html', {
         'events': events,
         'organizers': organizers,
+        'users': users,
+        'admins': admins,
         'total_events': total_events,
         'total_registrations': total_registrations,
         'total_users': total_users,
+        'total_organizers': total_organizers,
+        'total_speakers': total_speakers,
+        'total_attendees': total_attendees,
+        'total_admins': total_admins,
         'q': q,
         'status_filter': status_filter,
         'active_tab': active_tab,
+        'role_choices': role_choices,
     })
 
 
@@ -552,3 +610,219 @@ def admin_event_delete_view(request, slug):
         'event': event,
     })
 
+
+@user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser), login_url='admin_login')
+def admin_user_toggle_status(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=user_id)
+        if user == request.user:
+            messages.error(request, "You cannot deactivate your own administrative account.")
+        else:
+            user.is_active = not user.is_active
+            user.save()
+            status = "activated" if user.is_active else "deactivated"
+            messages.success(request, f'User "{user.username}" has been successfully {status}.')
+    return redirect('/adminlogin/dashboard/?tab=users')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser), login_url='admin_login')
+def admin_user_change_role(request, user_id):
+    if request.method == 'POST':
+        user = get_object_or_404(User, id=user_id)
+        new_role = request.POST.get('role', '').strip()
+        if new_role in ['attendee', 'organizer']:
+            profile, _ = UserProfile.objects.get_or_create(user=user)
+            is_demoting_self = (user == request.user and (user.is_staff or user.is_superuser))
+            if is_demoting_self:
+                messages.error(request, "For safety reasons, you cannot revoke your own Admin status.")
+            else:
+                user.is_staff = False
+                user.is_superuser = False
+                user.save()
+                profile.role = new_role
+                profile.save()
+                messages.success(request, f'User "{user.username}" role updated to {new_role.title()}.')
+        else:
+            messages.error(request, 'Invalid role selected.')
+    return redirect('/adminlogin/dashboard/?tab=users')
+
+
+@user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser), login_url='admin_login')
+def admin_user_delete(request, user_id):
+    target_user = get_object_or_404(User, id=user_id)
+    if target_user == request.user:
+        messages.error(request, "You cannot delete your own admin account.")
+        return redirect('/adminlogin/dashboard/?tab=users')
+    
+    profile, _ = UserProfile.objects.get_or_create(user=target_user)
+    organized_events = Event.objects.filter(organizer=target_user)
+    registrations = Registration.objects.filter(user=target_user)
+    
+    if request.method == 'POST':
+        username = target_user.username
+        target_user.delete()
+        messages.success(request, f'User account "{username}" has been permanently deleted from the platform.')
+        return redirect('/adminlogin/dashboard/?tab=users')
+        
+    return render(request, 'accounts/admin_user_delete.html', {
+        'target_user': target_user,
+        'profile': profile,
+        'events': organized_events,
+        'registrations': registrations,
+    })
+
+
+@user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser), login_url='admin_login')
+def admin_add_user(request):
+    error = None
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name  = request.POST.get('last_name', '').strip()
+        email      = request.POST.get('email', '').strip().lower()
+        password   = request.POST.get('password', '').strip()
+        confirm_pw = request.POST.get('confirm_password', '').strip()
+        phone      = request.POST.get('phone', '').strip()
+
+        if not all([first_name, last_name, email, password, confirm_pw]):
+            error = "All fields are required."
+        elif password != confirm_pw:
+            error = "Passwords do not match."
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters."
+        elif User.objects.filter(email__iexact=email).exists():
+            error = f"An account with email '{email}' already exists."
+        else:
+            new_user = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True
+            )
+            # Create profile without auto-verification
+            UserProfile.objects.get_or_create(user=new_user, defaults={'role': 'attendee', 'phone': phone})
+            send_eventsathi_email(
+                'Your EventSathi Attendee Account',
+                f'Hi {first_name},\n\nA new attendee account has been created for you on EventSathi.\n\nLogin URL: /accounts/login/\nEmail: {email}\nPassword: {password}\n\n– EventSathi Admin',
+                [email],
+            )
+            messages.success(request, f'User account for "{first_name} {last_name}" ({email}) created successfully.')
+            return redirect('/adminlogin/dashboard/?tab=users')
+
+    return render(request, 'accounts/admin_add_user.html', {'error': error})
+
+
+@user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser), login_url='admin_login')
+def admin_add_organizer(request):
+    error = None
+    if request.method == 'POST':
+        first_name   = request.POST.get('first_name', '').strip()
+        last_name    = request.POST.get('last_name', '').strip()
+        email        = request.POST.get('email', '').strip().lower()
+        password     = request.POST.get('password', '').strip()
+        confirm_pw   = request.POST.get('confirm_password', '').strip()
+        phone        = request.POST.get('phone', '').strip()
+        organization = request.POST.get('organization', '').strip()
+        designation  = request.POST.get('designation', '').strip()
+
+        if not all([first_name, last_name, email, password, confirm_pw]):
+            error = "First name, last name, email, password, and confirm password are required."
+        elif password != confirm_pw:
+            error = "Passwords do not match."
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters."
+        elif User.objects.filter(email__iexact=email).exists():
+            error = f"An account with email '{email}' already exists."
+        else:
+            new_organizer = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True
+            )
+            # Create profile without auto-verification
+            UserProfile.objects.get_or_create(
+                user=new_organizer, 
+                defaults={
+                    'role': 'organizer', 
+                    'phone': phone, 
+                    'organization': organization, 
+                    'designation': designation
+                }
+            )
+            send_eventsathi_email(
+                'Your EventSathi Organizer Account',
+                f'Hi {first_name},\n\nA new organizer account has been created for you on EventSathi.\n\nLogin URL: /accounts/login/\nEmail: {email}\nPassword: {password}\n\n– EventSathi Admin',
+                [email],
+            )
+            messages.success(request, f'Organizer account for "{first_name} {last_name}" ({email}) created successfully.')
+            return redirect('/adminlogin/dashboard/?tab=organizers')
+
+    return render(request, 'accounts/admin_add_organizer.html', {'error': error})
+
+
+@user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser), login_url='admin_login')
+def admin_add_admin(request):
+    error = None
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name  = request.POST.get('last_name', '').strip()
+        email      = request.POST.get('email', '').strip().lower()
+        password   = request.POST.get('password', '').strip()
+        confirm_pw = request.POST.get('confirm_password', '').strip()
+
+        if not all([first_name, last_name, email, password, confirm_pw]):
+            error = "All fields are required."
+        elif password != confirm_pw:
+            error = "Passwords do not match."
+        elif len(password) < 8:
+            error = "Password must be at least 8 characters."
+        elif User.objects.filter(email__iexact=email).exists():
+            error = f"An account with email '{email}' already exists."
+        else:
+            new_admin = User.objects.create_user(
+                username=email,
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True,
+                is_staff=True,
+                is_superuser=True
+            )
+            UserProfile.objects.get_or_create(user=new_admin, defaults={'role': 'attendee', 'phone': ''})
+            send_eventsathi_email(
+                'Your EventSathi Admin Account',
+                f'Hi {first_name},\n\nA new admin account has been created for you on EventSathi.\n\nLogin URL: /adminlogin/\nEmail: {email}\nPassword: {password}\n\nPlease change your password after first login.\n\n– EventSathi Admin',
+                [email],
+            )
+            messages.success(request, f'Admin account for "{first_name} {last_name}" ({email}) created successfully.')
+            return redirect('/adminlogin/dashboard/?tab=admins')
+
+    return render(request, 'accounts/admin_add_admin.html', {'error': error})
+
+
+@user_passes_test(lambda u: u.is_authenticated and (u.is_staff or u.is_superuser), login_url='admin_login')
+def admin_reset_user_password(request, user_id):
+    from django.utils.crypto import get_random_string
+    target_user = get_object_or_404(User, id=user_id)
+    # Generate temporary password
+    temp_password = get_random_string(length=8)
+    # Set password
+    target_user.set_password(temp_password)
+    target_user.save()
+    # Send email
+    send_eventsathi_email(
+        'Your EventSathi Password Has Been Reset',
+        f'Hi {target_user.first_name or target_user.username},\n\nYour EventSathi password has been reset by an administrator.\n\nTemporary Password: {temp_password}\n\nPlease change your password after logging in.\n\n– EventSathi Admin',
+        [target_user.email],
+    )
+    messages.success(request, f'Password reset for {target_user.get_full_name or target_user.username} ({target_user.email}) — temporary password sent.')
+    # Redirect back to appropriate tab
+    if target_user.profile.role == 'organizer':
+        return redirect('/adminlogin/dashboard/?tab=organizers')
+    else:
+        return redirect('/adminlogin/dashboard/?tab=users')

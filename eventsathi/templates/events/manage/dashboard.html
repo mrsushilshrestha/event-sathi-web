@@ -1,110 +1,6 @@
 {% extends 'base.html' %}
 {% block title %}Manage - {{ event.title }}{% endblock %}
 
-{% block extra_js %}
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const eventId = "{{ event.id }}";
-    const protocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-    const host = window.location.host;
-    const attendanceSocket = new WebSocket(`${protocol}${host}/ws/attendance/${eventId}/`);
-
-    const activityLog = document.getElementById('live-activity-log');
-    const noActivityMsg = document.getElementById('no-activity-msg');
-    const checkedInMetric = document.getElementById('metric-checked-in');
-    const regCountMetric = document.getElementById('metric-reg-count');
-    const revenueMetric = document.getElementById('metric-revenue');
-
-    attendanceSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        if (data.type === 'checkin_update') {
-            if (noActivityMsg) noActivityMsg.remove();
-            
-            const reg = data.registration;
-            let itemHtml = '';
-            
-            if (data.action === 'checkin') {
-                const time = new Date(reg.checkin_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                itemHtml = `
-                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded border-start border-4 border-success fade-in" style="background:rgba(34,197,94,0.05);">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-sm" style="width:32px;height:32px;font-size:0.75rem;">
-                                ${reg.attendee_name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <div class="fw-bold text-white small">${reg.attendee_name}</div>
-                                <small class="text-muted" style="font-size:0.7rem;">Ticket: ${reg.ticket_id}</small>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-success-subtle text-success small mb-1">Checked In</span>
-                            <div class="text-muted" style="font-size:0.65rem;">${time}</div>
-                        </div>
-                    </div>
-                `;
-                // Update metric
-                if (checkedInMetric) {
-                    checkedInMetric.textContent = parseInt(checkedInMetric.textContent) + 1;
-                }
-            } else if (data.action === 'booking') {
-                const time = new Date(reg.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                itemHtml = `
-                    <div class="d-flex align-items-center justify-content-between p-2 mb-2 rounded border-start border-4 border-primary fade-in" style="background:rgba(59,130,246,0.05);">
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="avatar-sm" style="width:32px;height:32px;font-size:0.75rem;background:var(--es-primary)!important;">
-                                ${reg.attendee_name.charAt(0).toUpperCase()}
-                            </div>
-                            <div>
-                                <div class="fw-bold text-white small">${reg.attendee_name}</div>
-                                <small class="text-muted" style="font-size:0.7rem;">New Booking: ${reg.ticket_id}</small>
-                            </div>
-                        </div>
-                        <div class="text-end">
-                            <span class="badge bg-primary-subtle text-primary small mb-1">Booked</span>
-                            <div class="text-muted" style="font-size:0.65rem;">${time}</div>
-                        </div>
-                    </div>
-                `;
-                // Update metrics
-                if (regCountMetric) {
-                    regCountMetric.textContent = parseInt(regCountMetric.textContent) + 1;
-                }
-                if (revenueMetric && reg.amount > 0) {
-                    let currentRev = parseFloat(revenueMetric.textContent.replace('₹', ''));
-                    revenueMetric.textContent = '₹' + (currentRev + reg.amount).toLocaleString();
-                }
-            }
-            
-            activityLog.insertAdjacentHTML('afterbegin', itemHtml);
-            
-            // Keep only last 10 activities in the log
-            if (activityLog.children.length > 10) {
-                activityLog.lastElementChild.remove();
-            }
-        }
-    };
-
-    attendanceSocket.onclose = function(e) {
-        console.warn('Attendance socket closed unexpectedly.');
-    };
-});
-</script>
-
-<style>
-.fade-in {
-    animation: fadeIn 0.5s ease-out forwards;
-}
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.3; }
-}
-</style>
-{% endblock %}
-
 {% block content %}
 <div class="py-4" style="background:var(--es-dark-2);border-bottom:1px solid var(--es-border);">
     <div class="container">
@@ -114,9 +10,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 <h3 class="fw-bold mb-0">{{ event.title }}</h3>
                 <small class="text-muted">Organizer Dashboard · {{ event.start_date|date:"d M Y" }}</small>
             </div>
-            <a href="{% url 'event_detail' event.slug %}" class="btn btn-outline-primary btn-sm">
-                <i class="bi bi-eye me-1"></i>Preview Event
-            </a>
+            <div class="d-flex gap-2">
+                <a href="{% url 'event_edit' event.slug %}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-pencil me-1"></i>Edit Event
+                </a>
+                <a href="{% url 'event_detail' event.slug %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-eye me-1"></i>Preview Event
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -128,14 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
             <div class="card p-3 manage-sidebar">
                 <nav class="nav flex-column gap-1">
                     <a class="nav-link active" href="{% url 'event_manage' event.slug %}"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a>
-                    <a class="nav-link" href="{% url 'manage_tickets' event.slug %}"><i class="bi bi-ticket me-2"></i>Ticket Tiers</a>
-                    <a class="nav-link" href="{% url 'manage_attendees' event.slug %}"><i class="bi bi-people me-2"></i>Attendees</a>
-                    <a class="nav-link" href="{% url 'manage_speakers' event.slug %}"><i class="bi bi-mic me-2"></i>Speakers</a>
-                    <a class="nav-link" href="{% url 'manage_sessions' event.slug %}"><i class="bi bi-list-check me-2"></i>Sessions</a>
-                    <a class="nav-link" href="{% url 'manage_sponsors' event.slug %}"><i class="bi bi-building me-2"></i>Sponsors</a>
-                    <a class="nav-link" href="{% url 'manage_comments' event.slug %}"><i class="bi bi-chat-left-text me-2"></i>Discussion</a>
-                    <a class="nav-link" href="{% url 'manage_announcements' event.slug %}"><i class="bi bi-megaphone me-2"></i>Announcements</a>
-                    <hr class="border-secondary">
+                    <a class="nav-link" href="{% url 'event_edit' event.slug %}"><i class="bi bi-pencil me-2"></i>Edit Event</a>
                     <a class="nav-link" href="{% url 'check_in' event.slug %}"><i class="bi bi-qr-code-scan me-2"></i>Check-In Portal</a>
                     <a class="nav-link" href="{% url 'event_analytics' event.slug %}"><i class="bi bi-bar-chart-line me-2"></i>Analytics</a>
                     <hr class="border-secondary">
@@ -146,88 +40,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         <!-- Main Content -->
         <div class="col-lg-9">
-            <!-- Header Actions -->
-            <div class="card p-4 mb-4 border shadow-sm" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
-                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                    <h5 class="fw-bold mb-0 text-white"><i class="bi bi-gear-wide-connected me-2 text-primary"></i>Quick Management</h5>
-                    <div class="d-flex gap-2">
-                        <a href="{% url 'event_edit' event.slug %}" class="btn btn-outline-primary btn-sm px-3">
-                            <i class="bi bi-pencil-square me-1"></i>Edit Basic Info
-                        </a>
-                        <form action="{% url 'event_duplicate' event.slug %}" method="post" style="display:inline;">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-outline-warning btn-sm px-3">
-                                <i class="bi bi-copy me-1"></i>Duplicate
-                            </button>
-                        </form>
-                        <div class="dropdown">
-                            <button class="btn btn-outline-light btn-sm px-3 dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                <i class="bi bi-eye me-1"></i>Visibility: {{ event.get_status_display }}
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end shadow border-0">
-                                <li>
-                                    <form action="{% url 'event_status_change' event.slug %}" method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="status" value="published">
-                                        <button type="submit" class="dropdown-item small {% if event.status == 'published' %}active{% endif %}">Published</button>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form action="{% url 'event_status_change' event.slug %}" method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="status" value="draft">
-                                        <button type="submit" class="dropdown-item small {% if event.status == 'draft' %}active{% endif %}">Draft</button>
-                                    </form>
-                                </li>
-                                <li>
-                                    <form action="{% url 'event_status_change' event.slug %}" method="post">
-                                        {% csrf_token %}
-                                        <input type="hidden" name="status" value="cancelled">
-                                        <button type="submit" class="dropdown-item small text-danger {% if event.status == 'cancelled' %}active{% endif %}">Cancelled</button>
-                                    </form>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Metrics -->
             <div class="row gy-3 mb-4">
-                <div class="col-sm-3 col-6">
+                <div class="col-sm-4">
                     <div class="metric-card">
-                        <div class="metric-value" id="metric-reg-count">{{ reg_count }}</div>
+                        <div class="metric-value">{{ reg_count }}</div>
                         <div class="metric-label">Total Registered</div>
                     </div>
                 </div>
-                <div class="col-sm-3 col-6">
+                <div class="col-sm-4">
                     <div class="metric-card">
-                        <div class="metric-value text-success" id="metric-checked-in">{{ checked_in }}</div>
+                        <div class="metric-value">{{ checked_in }}</div>
                         <div class="metric-label">Checked In</div>
                     </div>
                 </div>
-                <div class="col-sm-3 col-6">
+                <div class="col-sm-4">
                     <div class="metric-card">
-                        <div class="metric-value text-warning" id="metric-revenue">₹{{ total_revenue|floatformat:0 }}</div>
+                        <div class="metric-value">Rs{{ total_revenue|floatformat:0 }}</div>
                         <div class="metric-label">Revenue</div>
                     </div>
-                </div>
-                <div class="col-sm-3 col-6">
-                    <div class="metric-card">
-                        <div class="metric-value text-info">{{ event.views }}</div>
-                        <div class="metric-label">Total Views</div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Live Activity Log -->
-            <div class="card p-4 mb-4" style="border-color: rgba(34,197,94,0.3);">
-                <div class="d-flex justify-content-between align-items-center mb-3">
-                    <h5 class="fw-bold mb-0 text-white"><span class="d-inline-block rounded-circle bg-success me-2" style="width:8px;height:8px;animation:pulse 1.2s infinite;"></span>Live Activity Log</h5>
-                    <span class="badge bg-success-subtle text-success small">Real-time</span>
-                </div>
-                <div id="live-activity-log" class="overflow-auto" style="max-height: 200px;">
-                    <div class="text-center text-muted small py-3" id="no-activity-msg">Waiting for activity...</div>
                 </div>
             </div>
 
@@ -259,32 +90,6 @@ document.addEventListener('DOMContentLoaded', function() {
                         </div>
                     </a>
                 </div>
-                <div class="col-sm-6">
-                    <a href="{% url 'manage_announcements' event.slug %}" class="card p-4 d-block text-decoration-none">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width:48px;height:48px;background:rgba(108,61,225,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                                <i class="bi bi-megaphone fs-4" style="color:#a78bfa;"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-white">Announcement</div>
-                                <small class="text-muted">Broadcast to attendees</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
-                <div class="col-sm-6">
-                    <a href="{% url 'manage_sessions' event.slug %}" class="card p-4 d-block text-decoration-none">
-                        <div class="d-flex align-items-center gap-3">
-                            <div style="width:48px;height:48px;background:rgba(59,130,246,0.15);border-radius:12px;display:flex;align-items:center;justify-content:center;">
-                                <i class="bi bi-list-check fs-4 text-primary"></i>
-                            </div>
-                            <div>
-                                <div class="fw-bold text-white">Add Session</div>
-                                <small class="text-muted">Build your agenda</small>
-                            </div>
-                        </div>
-                    </a>
-                </div>
             </div>
 
             <!-- Registrations Table -->
@@ -307,7 +112,7 @@ document.addEventListener('DOMContentLoaded', function() {
                                 <td class="text-muted">{{ reg.ticket_id }}</td>
                                 <td>{{ reg.user.get_full_name|default:reg.user.username }}</td>
                                 <td>{{ reg.ticket_tier.name }}</td>
-                                <td>{% if reg.amount_paid == 0 %}Free{% else %}₹{{ reg.amount_paid|floatformat:0 }}{% endif %}</td>
+                                <td>{% if reg.amount_paid == 0 %}Free{% else %}Rs{{ reg.amount_paid|floatformat:0 }}{% endif %}</td>
                                 <td><span class="badge badge-status-{{ reg.status }}">{{ reg.get_status_display }}</span></td>
                             </tr>
                             {% endfor %}

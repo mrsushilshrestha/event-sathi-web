@@ -19,54 +19,6 @@
 
     <!-- Tabs — organizers see both panels, attendees only see Registered -->
     {% if is_organizer %}
-    <!-- Dashboard Summary Cards -->
-    <div class="row g-4 mb-5">
-        <div class="col-md-3">
-            <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
-                <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(249,115,22,0.1); color: var(--es-primary);">
-                    <i class="bi bi-calendar-event fs-3"></i>
-                </div>
-                <div>
-                    <h3 class="fw-bold mb-0 text-white">{{ metrics.total_events }}</h3>
-                    <small class="text-muted fw-semibold">Total Events</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
-                <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(16,185,129,0.1); color: var(--es-accent-green);">
-                    <i class="bi bi-people fs-3"></i>
-                </div>
-                <div>
-                    <h3 class="fw-bold mb-0 text-white">{{ metrics.total_attendees }}</h3>
-                    <small class="text-muted fw-semibold">Total Attendees</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
-                <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(6,182,212,0.1); color: var(--es-accent-cyan);">
-                    <i class="bi bi-currency-dollar fs-3"></i>
-                </div>
-                <div>
-                    <h3 class="fw-bold mb-0 text-white">₹{{ metrics.total_revenue|floatformat:0 }}</h3>
-                    <small class="text-muted fw-semibold">Total Revenue</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card p-4 border shadow-sm d-flex flex-row align-items-center gap-3" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
-                <div class="d-flex align-items-center justify-content-center" style="width: 54px; height: 54px; border-radius: 12px; background: rgba(108,61,225,0.1); color: #a78bfa;">
-                    <i class="bi bi-heart fs-3"></i>
-                </div>
-                <div>
-                    <h3 class="fw-bold mb-0 text-white">{{ metrics.total_likes }}</h3>
-                    <small class="text-muted fw-semibold">Total Likes</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <ul class="nav nav-pills mb-4 gap-2" id="eventsTab">
         <li class="nav-item">
             <button class="nav-link active px-4" id="organized-tab" data-bs-toggle="pill" data-bs-target="#organized" type="button">
@@ -174,7 +126,7 @@
                                 <div class="metric-label" style="font-size:0.75rem;">Ticket Tier</div>
                             </div>
                             <div class="metric-card flex-fill" style="padding:0.8rem;">
-                                <div class="metric-value fs-6">{% if reg.amount_paid == 0 %}Free{% else %}₹{{ reg.amount_paid|floatformat:0 }}{% endif %}</div>
+                                <div class="metric-value fs-6">{% if reg.amount_paid == 0 %}Free{% else %}Rs{{ reg.amount_paid|floatformat:0 }}{% endif %}</div>
                                 <div class="metric-label" style="font-size:0.75rem;">Paid</div>
                             </div>
                             <div class="metric-card flex-fill" style="padding:0.8rem;">
@@ -188,9 +140,6 @@
                             </a>
                             <a href="{% url 'view_ticket' reg.ticket_id %}" class="btn btn-sm btn-primary">
                                 <i class="bi bi-qr-code me-2"></i>My Ticket
-                            </a>
-                            <a href="{% url 'event_agenda' reg.event.slug %}" class="btn btn-sm btn-outline-secondary">
-                                <i class="bi bi-list-check me-1"></i>Agenda
                             </a>
                         </div>
                     </div>

@@ -92,16 +92,37 @@
             <div class="d-flex flex-column gap-2">
                 {% for conn in my_connections %}
                 <div class="card p-3 d-flex flex-row align-items-center gap-3">
-                    <div class="speaker-avatar" style="width:40px;height:40px;font-size:0.9rem;flex-shrink:0;">
-                        {{ conn.from_user.first_name|first|upper }}{{ conn.from_user.last_name|first|upper }}
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="fw-semibold small">{{ conn.from_user.get_full_name|default:conn.from_user.username }}</div>
-                        {% if conn.from_user.profile.organization %}<small class="text-muted">{{ conn.from_user.profile.organization }}</small>{% endif %}
-                    </div>
-                    <a href="{% url 'conversation' conn.from_user.id %}" class="btn btn-sm btn-outline-primary">
-                        <i class="bi bi-chat-dots"></i>
-                    </a>
+                    {% if conn.from_user != request.user %}
+                        {% if conn.from_user.profile.photo %}
+                        <img src="{{ conn.from_user.profile.photo.url }}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
+                        {% else %}
+                        <div class="speaker-avatar" style="width:40px;height:40px;font-size:0.9rem;flex-shrink:0;">
+                            {{ conn.from_user.first_name|first|upper }}{{ conn.from_user.last_name|first|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold small">{{ conn.from_user.get_full_name|default:conn.from_user.username }}</div>
+                            {% if conn.from_user.profile.organization %}<small class="text-muted">{{ conn.from_user.profile.organization }}</small>{% endif %}
+                        </div>
+                        <a href="{% url 'conversation' conn.from_user.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-chat-dots"></i>
+                        </a>
+                    {% else %}
+                        {% if conn.to_user.profile.photo %}
+                        <img src="{{ conn.to_user.profile.photo.url }}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;flex-shrink:0;" alt="">
+                        {% else %}
+                        <div class="speaker-avatar" style="width:40px;height:40px;font-size:0.9rem;flex-shrink:0;">
+                            {{ conn.to_user.first_name|first|upper }}{{ conn.to_user.last_name|first|upper }}
+                        </div>
+                        {% endif %}
+                        <div class="flex-grow-1">
+                            <div class="fw-semibold small">{{ conn.to_user.get_full_name|default:conn.to_user.username }}</div>
+                            {% if conn.to_user.profile.organization %}<small class="text-muted">{{ conn.to_user.profile.organization }}</small>{% endif %}
+                        </div>
+                        <a href="{% url 'conversation' conn.to_user.id %}" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-chat-dots"></i>
+                        </a>
+                    {% endif %}
                 </div>
                 {% endfor %}
             </div>

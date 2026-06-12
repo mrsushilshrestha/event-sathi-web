@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Add New Admin{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(249,115,22,0.04)); border-bottom: 1px solid var(--es-border); padding: 2rem 0;">
+    <div class="container">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'admin_dashboard' %}?tab=admins" class="btn btn-outline-secondary btn-sm px-3">
+                <i class="bi bi-arrow-left me-1"></i>Back
+            </a>
+            <div>
+                <h3 class="fw-bold mb-0 text-white"><i class="bi bi-person-plus-fill me-2 text-warning"></i>Add New Administrator</h3>
+                <p class="text-muted mb-0 small mt-1">Create a new admin account with full platform management access</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+            <div class="card border shadow-sm p-4" style="background: var(--es-card-bg); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <!-- Warning banner -->
+                <div class="alert d-flex align-items-start gap-3 mb-4 p-3 rounded-3" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5;">
+                    <i class="bi bi-shield-exclamation fs-4 flex-shrink-0 mt-1" style="color: #f87171;"></i>
+                    <div>
+                        <div class="fw-semibold mb-1" style="color: #f87171;">Admin Privilege Notice</div>
+                        <div class="small">This account will have <strong>full superuser access</strong> to all platform features including user management, event control, and system settings. Only grant this to trusted personnel.</div>
+                    </div>
+                </div>
+
+                {% if error %}
+                <div class="alert alert-danger py-2 px-3 rounded-3 mb-4" style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); color: #fca5a5; font-size: 0.9rem;">
+                    <i class="bi bi-exclamation-triangle me-2"></i>{{ error }}
+                </div>
+                {% endif %}
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small text-muted text-uppercase" style="letter-spacing:0.05em;">First Name</label>
+                            <input type="text" name="first_name" class="form-control" placeholder="First name" value="{{ request.POST.first_name }}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label fw-semibold small text-muted text-uppercase" style="letter-spacing:0.05em;">Last Name</label>
+                            <input type="text" name="last_name" class="form-control" placeholder="Last name" value="{{ request.POST.last_name }}" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-muted text-uppercase" style="letter-spacing:0.05em;">Email Address</label>
+                            <input type="email" name="email" class="form-control" placeholder="admin@example.com" value="{{ request.POST.email }}" required>
+                            <div class="form-text text-muted" style="font-size:0.78rem;">This will also be used as the login username.</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-muted text-uppercase" style="letter-spacing:0.05em;">Password</label>
+                            <div class="input-group">
+                                <input type="password" name="password" id="adminPassword" class="form-control" placeholder="Min. 8 characters" required>
+                                <button type="button" class="btn btn-outline-secondary show-pass-btn" data-target="adminPassword" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold small text-muted text-uppercase" style="letter-spacing:0.05em;">Confirm Password</label>
+                            <div class="input-group">
+                                <input type="password" name="confirm_password" id="adminPasswordConfirm" class="form-control" placeholder="Repeat password" required>
+                                <button type="button" class="btn btn-outline-secondary show-pass-btn" data-target="adminPasswordConfirm" tabindex="-1">
+                                    <i class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-3 mt-4">
+                        <button type="submit" class="btn btn-warning fw-bold px-5 py-2 flex-grow-1">
+                            <i class="bi bi-person-plus-fill me-2"></i>Create Admin Account
+                        </button>
+                        <a href="{% url 'admin_dashboard' %}?tab=admins" class="btn btn-outline-secondary px-4 py-2">Cancel</a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Info Card -->
+            <div class="card border mt-3 p-3" style="background: rgba(255,255,255,0.02); border-radius: var(--es-radius); border-color: var(--es-border)!important;">
+                <div class="small text-muted">
+                    <i class="bi bi-info-circle me-2 text-warning"></i>
+                    A welcome email with login credentials will be sent to the new admin's email address.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.form-control { background: var(--es-input-bg); border-color: var(--es-input-border); color: var(--es-text); }
+.form-control:focus { background: var(--es-input-bg); border-color: var(--es-border-strong); color: var(--es-text); box-shadow: none; }
+.form-control::placeholder { color: var(--es-text-muted); }
+.btn-outline-secondary { border-color: var(--es-input-border); background: var(--es-input-bg); color: var(--es-text-muted); }
+.btn-outline-secondary:hover { color: var(--es-primary); background: var(--es-input-bg); }
+</style>
+
+<script>
+document.querySelectorAll('.show-pass-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+        const input = document.getElementById(this.getAttribute('data-target'));
+        const icon = this.querySelector('i');
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.className = 'bi bi-eye-slash';
+        } else {
+            input.type = 'password';
+            icon.className = 'bi bi-eye';
+        }
+    });
+});
+</script>
+{% endblock %}

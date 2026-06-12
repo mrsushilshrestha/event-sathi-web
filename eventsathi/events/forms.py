@@ -1,4 +1,3 @@
-from datetime import timedelta
 from django import forms
 from django.utils.text import slugify
 from django.utils import timezone
@@ -6,14 +5,20 @@ from .models import Event, TicketTier, Speaker, EventSession, Sponsor, Announcem
 
 
 class EventForm(forms.ModelForm):
+    unlimited_capacity = forms.BooleanField(
+        required=False,
+        label='Unlimited attendees',
+        widget=forms.CheckboxInput()
+    )
+
     class Meta:
         model = Event
         fields = [
             'title', 'description', 'category', 'banner',
             'start_date', 'end_date',
             'registration_start', 'registration_end',
-            'venue', 'city',
-            'is_virtual', 'virtual_link', 'max_capacity', 'tags', 'is_featured',
+            'venue', 'city', 'latitude', 'longitude',
+            'is_virtual', 'virtual_link', 'max_capacity', 'price', 'tags',
         ]
         widgets = {
             'description': forms.Textarea(attrs={'rows': 5, 'placeholder': 'Describe your event — agenda highlights, what attendees will learn, who should attend…'}),
@@ -26,6 +31,9 @@ class EventForm(forms.ModelForm):
             'title': forms.TextInput(attrs={'placeholder': 'Give your event a catchy title'}),
             'venue': forms.TextInput(attrs={'placeholder': 'Auditorium, Hall, Building name…'}),
             'city': forms.TextInput(attrs={'placeholder': 'Mumbai'}),
+            'price': forms.NumberInput(attrs={'placeholder': 'Leave blank for free event', 'min': 0, 'step': '0.01'}),
+            'latitude': forms.HiddenInput(),
+            'longitude': forms.HiddenInput(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -37,9 +45,14 @@ class EventForm(forms.ModelForm):
             self.fields[f].widget.attrs['min'] = now_min
         self.fields['registration_start'].required = False
         self.fields['registration_end'].required = False
-        self.fields['is_featured'].required = False
         self.fields['virtual_link'].required = False
         self.fields['banner'].required = False
+        self.fields['latitude'].required = False
+        self.fields['longitude'].required = False
+        self.fields['price'].required = False
+        # If editing and max_capacity is 0, pre-check unlimited
+        if self.instance and self.instance.pk and self.instance.max_capacity == 0:
+            self.fields['unlimited_capacity'].initial = True
 
     def clean(self):
         cleaned_data = super().clean()
@@ -48,8 +61,23 @@ class EventForm(forms.ModelForm):
         end_date = cleaned_data.get('end_date')
         reg_start = cleaned_data.get('registration_start')
         reg_end = cleaned_data.get('registration_end')
+        max_capacity = cleaned_data.get('max_capacity')
+        price = cleaned_data.get('price')
+        unlimited = cleaned_data.get('unlimited_capacity', False)
+        is_virtual = cleaned_data.get('is_virtual', False)
+        virtual_link = cleaned_data.get('virtual_link', '').strip()
+        venue = cleaned_data.get('venue', '').strip()
+        city = cleaned_data.get('city', '').strip()
 
-        if start_date and start_date < now - timedelta(minutes=5):
+        if price is not None and price < 0:
+            self.add_error('price', 'Price cannot be negative.')
+
+        if unlimited:
+            cleaned_data['max_capacity'] = 0
+        elif max_capacity is not None and max_capacity <= 0:
+            self.add_error('max_capacity', 'Maximum capacity must be a positive number.')
+
+        if start_date and start_date < now:
             self.add_error('start_date', 'Start date cannot be in the past. Please choose a future date.')
         if end_date:
             if end_date < now:
@@ -60,6 +88,22 @@ class EventForm(forms.ModelForm):
             self.add_error('registration_start', 'Registration start cannot be in the past.')
         if reg_end and reg_start and reg_end <= reg_start:
             self.add_error('registration_end', 'Registration end must be after registration start.')
+        if reg_end and start_date and reg_end > start_date:
+            self.add_error('registration_end', 'Registration must close before or at the start time of the event.')
+
+        if is_virtual:
+            if not virtual_link:
+                self.add_error('virtual_link', 'Virtual link is required for virtual events.')
+            if not venue:
+                cleaned_data['venue'] = 'Virtual / Online'
+            if not city:
+                cleaned_data['city'] = 'Online'
+        else:
+            if not venue:
+                self.add_error('venue', 'Venue is required for in-person events.')
+            if not city:
+                self.add_error('city', 'City is required for in-person events.')
+
         return cleaned_data
 
     def save(self, commit=True):
@@ -87,6 +131,17 @@ class TicketTierForm(forms.ModelForm):
             'benefits': forms.Textarea(attrs={'rows': 4, 'placeholder': 'One benefit per line\nFree lunch\nNetworking access'}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        price = cleaned_data.get('price')
+        capacity = cleaned_data.get('capacity')
+
+        if price is not None and price < 0:
+            self.add_error('price', 'Price cannot be negative.')
+        if capacity is not None and capacity <= 0:
+            self.add_error('capacity', 'Capacity must be greater than zero.')
+        return cleaned_data
+
 
 class SpeakerForm(forms.ModelForm):
     class Meta:
@@ -109,11 +164,28 @@ class SessionForm(forms.ModelForm):
         }
 
     def __init__(self, *args, event=None, **kwargs):
+        self.event = event
         super().__init__(*args, **kwargs)
         if event:
             self.fields['speaker'].queryset = Speaker.objects.filter(event=event)
         self.fields['start_time'].input_formats = ['%Y-%m-%dT%H:%M']
         self.fields['end_time'].input_formats = ['%Y-%m-%dT%H:%M']
+
+    def clean(self):
+        cleaned_data = super().clean()
+        start_time = cleaned_data.get('start_time')
+        end_time = cleaned_data.get('end_time')
+
+        if start_time and end_time and end_time <= start_time:
+            self.add_error('end_time', 'Session end time must be after start time.')
+
+        if self.event:
+            if start_time and (start_time < self.event.start_date or start_time > self.event.end_date):
+                self.add_error('start_time', f'Session start time must be between event start ({self.event.start_date}) and end ({self.event.end_date}).')
+            if end_time and (end_time < self.event.start_date or end_time > self.event.end_date):
+                self.add_error('end_time', f'Session end time must be between event start ({self.event.start_date}) and end ({self.event.end_date}).')
+
+        return cleaned_data
 
 
 class SponsorForm(forms.ModelForm):
