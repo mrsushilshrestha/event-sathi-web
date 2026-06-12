@@ -1,4 +1,4 @@
-# 🎉 Event-Sathi — हरेक Event को साथी
+# Event-Sathi — हरेक Event को साथी
 
 Event-Sathi is a comprehensive web-based Event Management System designed to simplify event discovery, registration, ticketing, and event organization. The platform provides a centralized ecosystem where users can explore events, book tickets, receive QR-based digital passes, and interact with organizers, while organizers can efficiently manage events and attendees.
 
